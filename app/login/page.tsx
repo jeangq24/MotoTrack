@@ -9,10 +9,19 @@ export default function LoginPage() {
 
     const handleGoogleLogin = async () => {
         setLoading(true);
+        const BASE_URLS: Record<string, string> = {
+            dev: "http://localhost:3000",
+            prod: "https://moto-track-seven.vercel.app",
+        };
+
+        const baseUrl =
+            BASE_URLS[process.env.NEXT_PUBLIC_ENV ?? "dev"] ||
+            BASE_URLS.dev;
+
         const { error } = await supabase.auth.signInWithOAuth({
             provider: 'google',
             options: {
-                redirectTo: `${window.location.origin}/auth/callback`,
+                redirectTo: `${baseUrl}/auth/callback`,
             },
         });
 
