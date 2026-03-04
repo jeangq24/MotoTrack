@@ -23,29 +23,29 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
+        <main className="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
             {/* Background decorations */}
             <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
             <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
 
             <div className="w-full max-w-sm z-10 text-center flex flex-col gap-6">
                 <div>
-                    <span className="text-6xl mb-4 block">🛵</span>
-                    <h1 className="text-4xl font-black text-white tracking-tight mb-2">MotoTrack</h1>
+                    <span className="text-6xl mb-4 block"><img src="/logo_mototrack.png" alt="MotoTrack Logo" className="rounded-lg mx-auto" /></span>
                     <p className="text-slate-400 font-medium tracking-wide">
                         Registra servicios diarios de una forma rápida y calcula tus ingresos reales.
                     </p>
                 </div>
 
                 <div className="bg-slate-800/60 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-xl shadow-2xl mt-4">
-                    <p className="text-slate-300 text-sm mb-6 font-semibold">
+                    <p className="text-slate-300 text-sm mb-6 font-semibold" id="login-description">
                         Inicia sesión para guardar tu historial en la nube y acceder desde cualquier dispositivo
                     </p>
 
                     <button
                         onClick={handleGoogleLogin}
-                        disabled={loading}
-                        className="w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl font-bold bg-white text-slate-900 shadow-xl shadow-white/10 transition-all duration-300 active:scale-95 disabled:opacity-70 disabled:active:scale-100 hover:bg-slate-100"
+                        aria-disabled={loading}
+                        aria-describedby="login-description"
+                        className="w-full relative flex items-center justify-center gap-3 py-4 rounded-2xl font-bold bg-white text-slate-900 shadow-xl shadow-white/10 transition-all duration-300 active:scale-95 aria-disabled:opacity-70 aria-disabled:active:scale-100 hover:bg-slate-100 focus:outline-none focus-visible:ring-4 focus-visible:ring-amber-500"
                     >
                         {loading ? (
                             <div className="w-6 h-6 border-2 border-slate-900 border-t-transparent rounded-full animate-spin" />
@@ -78,8 +78,8 @@ export default function LoginPage() {
 
             {/* Signature */}
             <div className="absolute bottom-6 z-10 text-slate-500 text-xs font-semibold tracking-widest uppercase">
-                Desarrollado por <a href="https://www.linkedin.com/in/jeangarzon/" target="_blank" rel="noopener noreferrer" className="text-amber-400 font-bold hover:underline">JGDev</a>
+                Desarrollado por <a href="https://www.linkedin.com/in/jeangarzon/" target="_blank" rel="noopener noreferrer" className="text-amber-400 font-bold hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded px-1">JGDev</a>
             </div>
-        </div>
+        </main>
     );
 }

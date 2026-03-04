@@ -73,20 +73,21 @@ export default function Home() {
         <div className="max-w-md mx-auto">
           <div className="flex items-center justify-between py-4">
             <div>
-              <h1 className="text-white font-black text-xl tracking-tight">
+              <h1 className="text-white font-black text-xl tracking-tight" id="main-title">
                 🛵 MotoTrack
               </h1>
-              <p className="text-slate-500 text-xs">Historial de servicios</p>
+              <p className="text-slate-500 text-xs" aria-hidden="true">Historial de servicios</p>
             </div>
             <div className="text-right">
               <p className="text-emerald-400 font-black text-lg flex items-center gap-2 justify-end">
                 ${grandTotal.toLocaleString('es-CO')}
                 <button
                   onClick={handleSignOut}
-                  className="p-1 px-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition"
+                  aria-label="Cerrar sesión"
+                  className="p-1 px-2 rounded-lg bg-slate-800 text-slate-400 hover:text-white hover:bg-slate-700 transition focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400"
                   title="Cerrar sesión"
                 >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4" aria-hidden="true" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                   </svg>
                 </button>
@@ -96,10 +97,14 @@ export default function Home() {
           </div>
 
           {/* Tabs — 2x2 grid */}
-          <div className="grid grid-cols-2 gap-2 pb-3">
+          <div className="grid grid-cols-2 gap-2 pb-3" role="tablist" aria-label="Navegación principal">
             <button
               onClick={() => setActiveTab('registro')}
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${activeTab === 'registro'
+              role="tab"
+              aria-selected={activeTab === 'registro'}
+              aria-controls="panel-registro"
+              id="tab-registro"
+              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'registro'
                 ? 'bg-amber-400 text-slate-900'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
@@ -109,14 +114,18 @@ export default function Home() {
 
             <button
               onClick={() => setActiveTab('historial')}
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative ${activeTab === 'historial'
+              role="tab"
+              aria-selected={activeTab === 'historial'}
+              aria-controls="panel-historial"
+              id="tab-historial"
+              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'historial'
                 ? 'bg-amber-400 text-slate-900'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
               📋 Servicios
               {todayRecords.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-emerald-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center" aria-label={`${todayRecords.length} servicios hoy`}>
                   {todayRecords.length > 9 ? '9+' : todayRecords.length}
                 </span>
               )}
@@ -124,7 +133,11 @@ export default function Home() {
 
             <button
               onClick={() => setActiveTab('gastos')}
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 ${activeTab === 'gastos'
+              role="tab"
+              aria-selected={activeTab === 'gastos'}
+              aria-controls="panel-gastos"
+              id="tab-gastos"
+              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'gastos'
                 ? 'bg-red-400 text-slate-900'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
@@ -134,14 +147,18 @@ export default function Home() {
 
             <button
               onClick={() => setActiveTab('historial-gastos')}
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative ${activeTab === 'historial-gastos'
+              role="tab"
+              aria-selected={activeTab === 'historial-gastos'}
+              aria-controls="panel-historial-gastos"
+              id="tab-historial-gastos"
+              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'historial-gastos'
                 ? 'bg-red-400 text-slate-900'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
               🗒️ Historial Gastos
               {todayExpenses.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center">
+                <span className="absolute -top-1 -right-1 bg-red-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center" aria-label={`${todayExpenses.length} gastos hoy`}>
                   {todayExpenses.length > 9 ? '9+' : todayExpenses.length}
                 </span>
               )}
@@ -164,33 +181,37 @@ export default function Home() {
 
           {/* Tab Content */}
           {activeTab === 'registro' && (
-            <div className="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50">
+            <div role="tabpanel" aria-labelledby="tab-registro" id="panel-registro" className="bg-slate-800/40 rounded-2xl p-4 border border-slate-700/50">
               <RegisterForm onSave={handleSaveService} />
             </div>
           )}
 
           {activeTab === 'historial' && (
-            <HistoryView
-              byDate={byDate}
-              sortedDates={sortedDates}
-              getDayTotal={getDayTotal}
-              onDelete={deleteService}
-            />
+            <div role="tabpanel" aria-labelledby="tab-historial" id="panel-historial">
+              <HistoryView
+                byDate={byDate}
+                sortedDates={sortedDates}
+                getDayTotal={getDayTotal}
+                onDelete={deleteService}
+              />
+            </div>
           )}
 
           {activeTab === 'gastos' && (
-            <div className="bg-slate-800/40 rounded-2xl p-4 border border-red-900/30">
+            <div role="tabpanel" aria-labelledby="tab-gastos" id="panel-gastos" className="bg-slate-800/40 rounded-2xl p-4 border border-red-900/30">
               <ExpenseForm onSave={handleSaveExpense} />
             </div>
           )}
 
           {activeTab === 'historial-gastos' && (
-            <ExpenseHistory
-              byDate={expensesByDate}
-              sortedDates={expenseSortedDates}
-              getDayExpenseTotal={getDayExpenseTotal}
-              onDelete={deleteExpense}
-            />
+            <div role="tabpanel" aria-labelledby="tab-historial-gastos" id="panel-historial-gastos">
+              <ExpenseHistory
+                byDate={expensesByDate}
+                sortedDates={expenseSortedDates}
+                getDayExpenseTotal={getDayExpenseTotal}
+                onDelete={deleteExpense}
+              />
+            </div>
           )}
 
           {/* Footer signature */}

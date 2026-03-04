@@ -61,20 +61,22 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
     return (
         <div className="flex flex-col gap-5">
             {/* Step 1: Expense Type */}
-            <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+            <section aria-labelledby="label-expense-type">
+                <h2 id="label-expense-type" className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
                     1. Tipo de gasto
-                </p>
-                <div className="grid grid-cols-2 gap-3">
+                </h2>
+                <div className="grid grid-cols-2 gap-3" role="radiogroup" aria-labelledby="label-expense-type">
                     {expenseTypes.map((type) => {
                         const isSelected = selectedType === type;
                         return (
                             <button
                                 key={type}
+                                role="radio"
+                                aria-checked={isSelected}
                                 onClick={() => setSelectedType(type)}
-                                className={`flex flex-col items-center justify-center gap-1 py-4 rounded-2xl font-bold transition-all duration-200 active:scale-95 ${isSelected
-                                        ? SELECTED_BG[type]
-                                        : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
+                                className={`flex flex-col items-center justify-center gap-1 py-4 rounded-2xl font-bold transition-all duration-200 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-slate-400 ${isSelected
+                                    ? SELECTED_BG[type]
+                                    : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
                                     }`}
                             >
                                 <span className="text-3xl">{EXPENSE_EMOJIS[type]}</span>
@@ -83,27 +85,29 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         );
                     })}
                 </div>
-            </div>
+            </section>
 
             {/* Step 2: Amount */}
-            <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+            <section aria-labelledby="label-expense-amount" aria-live="polite">
+                <h2 id="label-expense-amount" className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
                     2. Valor del gasto
-                </p>
-                <div className="grid grid-cols-3 gap-2 mb-2">
+                </h2>
+                <div className="grid grid-cols-3 gap-2 mb-2" role="radiogroup" aria-labelledby="label-expense-amount">
                     {EXPENSE_PRESET_AMOUNTS.map((amount) => {
                         const isSelected = !showCustom && selectedAmount === amount;
                         return (
                             <button
                                 key={amount}
+                                role="radio"
+                                aria-checked={isSelected}
                                 onClick={() => {
                                     setSelectedAmount(amount);
                                     setShowCustom(false);
                                     setCustomAmount('');
                                 }}
-                                className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${isSelected
-                                        ? 'bg-red-400 text-slate-900 shadow-lg shadow-red-400/30 scale-[1.02]'
-                                        : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
+                                className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 ${isSelected
+                                    ? 'bg-red-400 text-slate-900 shadow-lg shadow-red-400/30 scale-[1.02]'
+                                    : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
                                     }`}
                             >
                                 {formatCOP(amount)}
@@ -111,13 +115,15 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         );
                     })}
                     <button
+                        role="radio"
+                        aria-checked={showCustom}
                         onClick={() => {
                             setShowCustom(true);
                             setSelectedAmount(null);
                         }}
-                        className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 ${showCustom
-                                ? 'bg-violet-400 text-slate-900 shadow-lg shadow-violet-400/30 scale-[1.02]'
-                                : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
+                        className={`py-3 rounded-xl text-sm font-bold transition-all duration-200 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-violet-400 ${showCustom
+                            ? 'bg-violet-400 text-slate-900 shadow-lg shadow-violet-400/30 scale-[1.02]'
+                            : 'bg-slate-700/60 text-slate-200 hover:bg-slate-600/60'
                             }`}
                     >
                         🖊️ Otro
@@ -127,14 +133,16 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                 {showCustom && (
                     <div className="mt-2">
                         <div className="relative">
-                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold">$</span>
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold" aria-hidden="true">$</span>
                             <input
+                                id="custom-expense-input"
                                 type="number"
                                 inputMode="numeric"
                                 placeholder="Ingresa el valor"
+                                aria-label="Ingresa un gasto personalizado"
                                 value={customAmount}
                                 onChange={(e) => setCustomAmount(e.target.value.replace(/\D/g, ''))}
-                                className="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-700/60 text-slate-100 text-base font-semibold border border-violet-400/50 focus:outline-none focus:border-violet-400 placeholder:text-slate-500"
+                                className="w-full pl-8 pr-4 py-3 rounded-xl bg-slate-700/60 text-slate-100 text-base font-semibold border border-violet-400/50 focus:outline-none focus:border-violet-400 focus-visible:ring-2 focus-visible:ring-violet-400 placeholder:text-slate-500"
                                 autoFocus
                             />
                         </div>
@@ -145,20 +153,21 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         )}
                     </div>
                 )}
-            </div>
+            </section>
 
             {/* Step 3: Optional note */}
             <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
+                <label htmlFor="expense-note" className="block text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">
                     3. Nota (opcional)
-                </p>
+                </label>
                 <input
+                    id="expense-note"
                     type="text"
                     placeholder="Ej: Tanque lleno, Almuerzo..."
                     value={note}
                     onChange={(e) => setNote(e.target.value)}
                     maxLength={60}
-                    className="w-full px-4 py-3 rounded-xl bg-slate-700/60 text-slate-100 text-sm border border-slate-600/50 focus:outline-none focus:border-slate-400 placeholder:text-slate-500"
+                    className="w-full px-4 py-3 rounded-xl bg-slate-700/60 text-slate-100 text-sm border border-slate-600/50 focus:outline-none focus:border-slate-400 focus-visible:ring-2 focus-visible:ring-slate-400 placeholder:text-slate-500"
                 />
             </div>
 
@@ -166,11 +175,12 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
             <button
                 onClick={handleSave}
                 disabled={!canSave}
-                className={`w-full py-5 rounded-2xl text-xl font-black tracking-wide transition-all duration-300 active:scale-95 ${saved
-                        ? 'bg-emerald-400 text-slate-900 scale-[1.02]'
-                        : canSave
-                            ? 'bg-red-400 text-white shadow-xl shadow-red-400/30 hover:bg-red-300'
-                            : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
+                aria-disabled={!canSave}
+                className={`w-full py-5 rounded-2xl text-xl font-black tracking-wide transition-all duration-300 active:scale-95 focus:outline-none focus-visible:ring-4 focus-visible:ring-red-400 disabled:opacity-80 ${saved
+                    ? 'bg-emerald-400 text-slate-900 scale-[1.02]'
+                    : canSave
+                        ? 'bg-red-400 text-white shadow-xl shadow-red-400/30 hover:bg-red-300'
+                        : 'bg-slate-700/40 text-slate-500 cursor-not-allowed'
                     }`}
             >
                 {saved ? '✅ ¡Guardado!' : canSave ? '💾 Guardar Gasto' : 'Selecciona tipo y valor'}
