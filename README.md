@@ -27,6 +27,7 @@ Mi objetivo es seguir evolucionando el sistema, publicándolo de forma gratuita 
 Registro en 3 toques:
 - **🛠️ Servicios:** Domicilios, Envíos, Pasajeros o Personalizados.
 - **⛽ Gastos:** Gasolina, Comida, Mantenimiento preventivo.
+- **🏍️ Taller y Mantenimiento:** Sistema dinámico para el seguimiento de repuestos y tareas de desgaste. Define tus propias reglas (Ej: Cambio de lubricante cada 3,000 km) y MotoTrack calcula y te advierte automáticamente el estado (Seguro, Próximo o Vencido) en base al odómetro.
 - **📱 UX para Móviles:** Botones XL, alto contraste (modo oscuro nativo) y navegación inferior. Funciona perfecto con una mano o mientras usas guantes (sin requerir teclado).
 - **📊 Estadísticas en Vivo:** Tarjetas que calculan _Ingresos Totales_, _Gastos Diarios_ y _Ganancia Neta (Libre)_ agrupado por hoy y por el acumulado histórico.
 - **🔒 Nube Segura:** Inicio de sesión con un clic usando Google. Tus datos están aislados (cada usuario solo ve lo suyo) mediante `Row Level Security (RLS)` de PostgreSQL.
@@ -71,7 +72,11 @@ returns numeric language sql security definer as $$
 $$;
 ```
 
-### 5. Arrancar en desarrollo
+### 5. Configurar Módulo de Mantenimientos (Novedad v1.2.0)
+El sistema dinámico para calcular desgaste incluye tablas nuevas (vehicles, rules, logs) y seguridad. Para tener este feature funcional:
+Abre en la raíz del proyecto el archivo `supabase_v1.2.0_maintenance.sql`, cópialo y ejecútalo entero en tu SQL Editor de Supabase.
+
+### 6. Arrancar en desarrollo
 ```bash
 npm run dev
 ```
@@ -85,7 +90,6 @@ Este sistema apenas arranca. Las metas a mediano plazo incluyen:
 
 - [ ] **Modo Offline:** Migrar con Service Workers para que se puedan registrar carreras en zonas sin señal de internet y sincronizar al reconectar (Local-First).
 - [ ] **Métricas Mensuales:** Gráficos visuales y comparativas (Ej: "¿Lunes o Domingo, qué día rinde más?").
-- [ ] **Gestión de Vehículos:** Recordatorios por kilometraje para cambios de aceite o frenos del vehículo actual.
 - [ ] **Multi-plataforma:** Compilación con Capacitor o React Native para tener notificaciones push nativas.
 
 ---
