@@ -54,9 +54,24 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key-publica
 ```
 
 ### 3. Ejecutar las tablas SQL
-En el SQL Editor de tu proyecto de Supabase, ejecuta los comandos para crear las tablas `services` y `expenses`, seguido de las políticas de seguridad (RLS). *(Revisa [supabase_setup.md](./.gemini/antigravity/brain/...) si usaste la guía de la IA o pídelo en issues).*
+En el SQL Editor de tu proyecto de Supabase, ejecuta los comandos para crear las tablas `services` y `expenses`, seguido de las políticas de seguridad (RLS).
 
-### 4. Arrancar en desarrollo
+### 4. Funciones de Base de Datos (Optimización v1.1.0)
+A partir de la versión v1.1.0, la app aplica una optimización delegando el cálculo matemático del histórico general directo a tu base de datos y paginando el historial, para evitar costos altos de lecturas repetidas. **Debes ejecutar este código SQL en el editor de tu proyecto en Supabase para habilitarlo**:
+
+```sql
+create or replace function get_services_total(user_uuid uuid)
+returns numeric language sql security definer as $$
+  select coalesce(sum(price), 0) from services where user_id = user_uuid;
+$$;
+
+create or replace function get_expenses_total(user_uuid uuid)
+returns numeric language sql security definer as $$
+  select coalesce(sum(amount), 0) from expenses where user_id = user_uuid;
+$$;
+```
+
+### 5. Arrancar en desarrollo
 ```bash
 npm run dev
 ```

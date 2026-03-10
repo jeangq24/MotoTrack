@@ -1,19 +1,29 @@
 import { createClient } from '@/utils/supabase/server';
 import { NextResponse } from 'next/server';
 
-// GET /api/expenses  →  list all records ordered newest first
-export async function GET() {
+// GET /api/expenses  →  list all records ordered newest first (paginated)
+export async function GET(request: Request) {
     const supabase = await createClient();
+    const { searchParams } = new URL(request.url);
+    const limit = parseInt(searchParams.get('limit') || '50', 10);
+
     const { data: { user }, error: authErr } = await supabase.auth.getUser();
     if (authErr || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { data, error } = await supabase
+    const { data: records, error } = await supabase
         .from('expenses')
         .select('*')
-        .order('timestamp', { ascending: false });
+        .order('timestamp', { ascending: false })
+        .limit(limit);
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-    return NextResponse.json(data);
+
+    const { data: totalData } = await supabase.rpc('get_expenses_total', { user_uuid: user.id });
+
+    return NextResponse.json({
+        records: records || [],
+        grandTotal: totalData || 0
+    });
 }
 
 // POST /api/expenses  →  insert a new record

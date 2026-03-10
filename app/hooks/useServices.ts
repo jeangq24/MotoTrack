@@ -13,16 +13,24 @@ function getTodayStr(): string {
 
 export function useServices() {
     const [records, setRecords] = useState<ServiceRecord[]>([]);
+    const [grandTotalState, setGrandTotalState] = useState<number>(0);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch all records from the API on mount
+    // Fetch records from the API on mount (paginated)
     const fetchRecords = useCallback(async () => {
         try {
-            const res = await fetch('/api/services');
+            const res = await fetch('/api/services?limit=50');
             if (!res.ok) throw new Error('Error al cargar servicios');
-            const data: ServiceRecord[] = await res.json();
-            setRecords(data);
+            const data = await res.json();
+            
+            if (Array.isArray(data)) {
+                setRecords(data);
+                setGrandTotalState(data.reduce((sum: number, r: ServiceRecord) => sum + r.price, 0));
+            } else {
+                setRecords(data.records);
+                setGrandTotalState(data.grandTotal);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
@@ -46,6 +54,7 @@ export function useServices() {
 
         // Optimistic update — show immediately in UI
         setRecords((prev) => [record, ...prev]);
+        setGrandTotalState((prev) => prev + price);
 
         try {
             const res = await fetch('/api/services', {
@@ -56,11 +65,13 @@ export function useServices() {
             if (!res.ok) {
                 // Rollback on failure
                 setRecords((prev) => prev.filter((r) => r.id !== record.id));
+                setGrandTotalState((prev) => prev - price);
                 const { error: apiError } = await res.json();
                 setError(apiError ?? 'Error al guardar');
             }
         } catch {
             setRecords((prev) => prev.filter((r) => r.id !== record.id));
+            setGrandTotalState((prev) => prev - price);
             setError('Sin conexión. Intenta de nuevo.');
         }
 
@@ -68,19 +79,25 @@ export function useServices() {
     }, []);
 
     const deleteService = useCallback(async (id: string) => {
+        const toDelete = records.find(r => r.id === id);
+        const amountToSubtract = toDelete?.price || 0;
+
         // Optimistic update — remove immediately
         const prev = records;
         setRecords((r) => r.filter((s) => s.id !== id));
+        setGrandTotalState((prevTotal) => prevTotal - amountToSubtract);
 
         try {
             const res = await fetch(`/api/services/${id}`, { method: 'DELETE' });
             if (!res.ok) {
                 // Rollback on failure
                 setRecords(prev);
+                setGrandTotalState((prevTotal) => prevTotal + amountToSubtract);
                 setError('Error al eliminar');
             }
         } catch {
             setRecords(prev);
+            setGrandTotalState((prevTotal) => prevTotal + amountToSubtract);
             setError('Sin conexión. Intenta de nuevo.');
         }
     }, [records]);
@@ -96,7 +113,7 @@ export function useServices() {
 
     const todayRecords = records.filter((r) => r.date === getTodayStr());
     const todayTotal = todayRecords.reduce((sum, r) => sum + r.price, 0);
-    const grandTotal = records.reduce((sum, r) => sum + r.price, 0);
+    const grandTotal = grandTotalState;
 
     const getDayTotal = useCallback(
         (date: string) =>
