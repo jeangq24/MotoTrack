@@ -11,8 +11,9 @@ import HistoryView from './components/HistoryView';
 import StatsBar from './components/StatsBar';
 import ExpenseForm from './components/ExpenseForm';
 import ExpenseHistory from './components/ExpenseHistory';
+import VehicleManager from './components/VehicleManager';
 
-type Tab = 'registro' | 'historial' | 'gastos' | 'historial-gastos';
+type Tab = 'registro' | 'historial' | 'gastos' | 'historial-gastos' | 'vehiculos';
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('registro');
@@ -102,20 +103,20 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tabs — 2x2 grid */}
-          <div className="grid grid-cols-2 gap-2 pb-3" role="tablist" aria-label="Navegación principal">
+          {/* Tabs — 2x2 or 3x2 grid */}
+          <div className="grid gap-2 pb-3 mx-auto" style={{ gridTemplateColumns: "repeat(5, 1fr)" }} role="tablist" aria-label="Navegación principal">
             <button
               onClick={() => setActiveTab('registro')}
               role="tab"
               aria-selected={activeTab === 'registro'}
               aria-controls="panel-registro"
               id="tab-registro"
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'registro'
-                ? 'bg-amber-400 text-slate-900'
+              className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'registro'
+                ? 'bg-amber-400 text-slate-900 shadow-lg scale-105'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
-              ➕ Registrar
+              <span className="text-lg leading-none">➕</span><span className="leading-none text-[8px] md:text-[10px] uppercase tracking-wider">Registrar</span>
             </button>
 
             <button
@@ -124,14 +125,14 @@ export default function Home() {
               aria-selected={activeTab === 'historial'}
               aria-controls="panel-historial"
               id="tab-historial"
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'historial'
-                ? 'bg-amber-400 text-slate-900'
+              className={`py-2 rounded-xl text-xs font-bold transition-all relative flex flex-col items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 ${activeTab === 'historial'
+                ? 'bg-amber-400 text-slate-900 shadow-lg scale-105'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
-              📋 Servicios
+              <span className="text-lg leading-none">📋</span><span className="leading-none text-[8px] md:text-[10px] uppercase tracking-wider">Servicios</span>
               {todayRecords.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-emerald-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center" aria-label={`${todayRecords.length} servicios hoy`}>
+                <span className="absolute -top-1 -right-1 bg-emerald-400 text-slate-900 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                   {todayRecords.length > 9 ? '9+' : todayRecords.length}
                 </span>
               )}
@@ -143,12 +144,12 @@ export default function Home() {
               aria-selected={activeTab === 'gastos'}
               aria-controls="panel-gastos"
               id="tab-gastos"
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'gastos'
-                ? 'bg-red-400 text-slate-900'
+              className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'gastos'
+                ? 'bg-red-400 text-slate-900 shadow-lg scale-105'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
-              ⛽ Gastos
+              <span className="text-lg leading-none">⛽</span><span className="leading-none text-[8px] md:text-[10px] uppercase tracking-wider">Gastos</span>
             </button>
 
             <button
@@ -157,17 +158,31 @@ export default function Home() {
               aria-selected={activeTab === 'historial-gastos'}
               aria-controls="panel-historial-gastos"
               id="tab-historial-gastos"
-              className={`py-2.5 rounded-xl text-sm font-bold transition-all duration-200 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'historial-gastos'
-                ? 'bg-red-400 text-slate-900'
+              className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-red-400 ${activeTab === 'historial-gastos'
+                ? 'bg-red-400 text-slate-900 shadow-lg scale-105'
                 : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
                 }`}
             >
-              🗒️ Historial Gastos
+              <span className="text-lg leading-none">🗒️</span><span className="leading-none text-[8px] md:text-[10px] uppercase tracking-wider text-center">Hist. Gastos</span>
               {todayExpenses.length > 0 && (
-                <span className="absolute -top-1 -right-1 bg-red-400 text-slate-900 text-xs font-black rounded-full w-5 h-5 flex items-center justify-center" aria-label={`${todayExpenses.length} gastos hoy`}>
+                <span className="absolute -top-1 -right-1 bg-red-400 text-slate-900 text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
                   {todayExpenses.length > 9 ? '9+' : todayExpenses.length}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => setActiveTab('vehiculos')}
+              role="tab"
+              aria-selected={activeTab === 'vehiculos'}
+              aria-controls="panel-vehiculos"
+              id="tab-vehiculos"
+              className={`py-2 rounded-xl text-xs font-bold transition-all flex flex-col items-center gap-1 relative focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 ${activeTab === 'vehiculos'
+                ? 'bg-blue-400 text-slate-900 shadow-lg scale-105'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700'
+                }`}
+            >
+              <span className="text-lg leading-none">🏍️</span><span className="leading-none text-[8px] md:text-[10px] uppercase tracking-wider">Taller</span>
             </button>
           </div>
         </div>
@@ -223,6 +238,12 @@ export default function Home() {
                 hasMore={hasMoreExpenses}
                 loadingMore={loadingMoreExpenses}
               />
+            </div>
+          )}
+
+          {activeTab === 'vehiculos' && (
+            <div role="tabpanel" aria-labelledby="tab-vehiculos" id="panel-vehiculos">
+               <VehicleManager />
             </div>
           )}
 
