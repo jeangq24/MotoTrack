@@ -115,4 +115,13 @@ ON maintenance_logs FOR SELECT USING (
 );
 
 -- =================================================================================
+
+-- 5. ASIGNAR PERMISOS A LOS ROLES DE SUPABASE (CORRECCIÓN DE PERMISO DENEGADO)
+-- Esto asegura que los usuarios autenticados a través de la API tengan permiso de usar las tablas
+
+GRANT ALL ON TABLE vehicles TO anon, authenticated, service_role;
+GRANT ALL ON TABLE maintenance_rules TO anon, authenticated, service_role;
+GRANT ALL ON TABLE maintenance_logs TO anon, authenticated, service_role;
+
+-- =================================================================================
 -- ¡Listo! Copia y pega esto en el SQL Editor de tu proyecto en Supabase y ejecútalo.

@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { MaintenanceRule, MaintenanceStatus } from '../types';
 
 function generateId(): string {
-    return Date.now().toString(36) + Math.random().toString(36).slice(2);
+    return crypto.randomUUID();
 }
 
 export function useMaintenance(vehicleId: string | null) {
