@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { ExpenseRecord, EXPENSE_EMOJIS, EXPENSE_LABELS } from '../types';
 
 interface ExpenseHistoryProps {
@@ -8,6 +8,9 @@ interface ExpenseHistoryProps {
     sortedDates: string[];
     getDayExpenseTotal: (date: string) => number;
     onDelete: (id: string) => void;
+    loadMore?: () => void;
+    hasMore?: boolean;
+    loadingMore?: boolean;
 }
 
 const formatCOP = (n: number) => '$' + n.toLocaleString('es-CO');
@@ -67,11 +70,43 @@ export default function ExpenseHistory({
     sortedDates,
     getDayExpenseTotal,
     onDelete,
+    loadMore,
+    hasMore,
+    loadingMore,
 }: ExpenseHistoryProps) {
     const [confirmRecord, setConfirmRecord] = useState<ExpenseRecord | null>(null);
     const [expandedDates, setExpandedDates] = useState<Set<string>>(
         () => new Set(sortedDates.slice(0, 1))
     );
+
+    const observerRef = useRef<IntersectionObserver | null>(null);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        if (loadingMore) return;
+
+        if (observerRef.current) {
+            observerRef.current.disconnect();
+        }
+
+        observerRef.current = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && hasMore && loadMore) {
+                loadMore();
+            }
+        }, {
+            root: null,
+            rootMargin: '20px', // Trigger sligthly before it hits the bottom
+            threshold: 1.0
+        });
+
+        if (loadMoreRef.current) {
+            observerRef.current.observe(loadMoreRef.current);
+        }
+
+        return () => {
+            if (observerRef.current) observerRef.current.disconnect();
+        };
+    }, [hasMore, loadingMore, loadMore]);
 
     const toggleDate = (date: string) => {
         setExpandedDates((prev) => {
@@ -175,6 +210,17 @@ export default function ExpenseHistory({
                     );
                 })}
             </div>
+
+            {hasMore && (
+                <div ref={loadMoreRef} className="pt-2 pb-4 flex justify-center py-4">
+                    {loadingMore && (
+                        <div className="flex items-center gap-2 text-slate-400 font-medium">
+                            <div className="w-5 h-5 rounded-full border-2 border-slate-400 border-t-white animate-spin"></div>
+                            Cargando...
+                        </div>
+                    )}
+                </div>
+            )}
         </>
     );
 }

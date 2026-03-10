@@ -34,6 +34,9 @@ export default function Home() {
     getDayTotal,
     addService,
     deleteService,
+    loadMore: loadMoreServices,
+    hasMore: hasMoreServices,
+    loadingMore: loadingMoreServices,
   } = useServices();
 
   const {
@@ -46,6 +49,9 @@ export default function Home() {
     getDayExpenseTotal,
     addExpense,
     deleteExpense,
+    loadMore: loadMoreExpenses,
+    hasMore: hasMoreExpenses,
+    loadingMore: loadingMoreExpenses,
   } = useExpenses();
 
   const loaded = servicesLoaded && expensesLoaded;
@@ -193,6 +199,9 @@ export default function Home() {
                 sortedDates={sortedDates}
                 getDayTotal={getDayTotal}
                 onDelete={deleteService}
+                loadMore={loadMoreServices}
+                hasMore={hasMoreServices}
+                loadingMore={loadingMoreServices}
               />
             </div>
           )}
@@ -210,6 +219,9 @@ export default function Home() {
                 sortedDates={expenseSortedDates}
                 getDayExpenseTotal={getDayExpenseTotal}
                 onDelete={deleteExpense}
+                loadMore={loadMoreExpenses}
+                hasMore={hasMoreExpenses}
+                loadingMore={loadingMoreExpenses}
               />
             </div>
           )}

@@ -12,31 +12,51 @@ export function useExpenses() {
     const [grandTotalState, setGrandTotalState] = useState<number>(0);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const limit = 50;
 
     // Fetch expenses from the API on mount (paginated)
-    const fetchExpenses = useCallback(async () => {
+    const fetchExpenses = useCallback(async (currentOffset = 0, isLoadMore = false) => {
+        if (isLoadMore) setLoadingMore(true);
         try {
-            const res = await fetch('/api/expenses?limit=50');
+            const res = await fetch(`/api/expenses?limit=${limit}&offset=${currentOffset}`);
             if (!res.ok) throw new Error('Error al cargar gastos');
             const data = await res.json();
             
-            if (Array.isArray(data)) {
-                setExpenses(data);
-                setGrandTotalState(data.reduce((sum: number, e: ExpenseRecord) => sum + e.amount, 0));
+            const fetchedRecords = Array.isArray(data) ? data : (data.records || []);
+            
+            if (isLoadMore) {
+                setExpenses(prev => {
+                    const existingIds = new Set(prev.map(e => e.id));
+                    const newUnique = fetchedRecords.filter((e: ExpenseRecord) => !existingIds.has(e.id));
+                    return [...prev, ...newUnique];
+                });
             } else {
-                setExpenses(data.records);
-                setGrandTotalState(data.grandTotal);
+                setExpenses(fetchedRecords);
+                setGrandTotalState(Array.isArray(data) ? data.reduce((sum: number, e: ExpenseRecord) => sum + e.amount, 0) : data.grandTotal);
             }
+
+            setHasMore(fetchedRecords.length === limit);
+            setOffset(currentOffset + fetchedRecords.length);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
-            setLoaded(true);
+            if (!isLoadMore) setLoaded(true);
+            if (isLoadMore) setLoadingMore(false);
         }
-    }, []);
+    }, [limit]);
 
     useEffect(() => {
-        fetchExpenses();
+        fetchExpenses(0, false);
     }, [fetchExpenses]);
+
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) {
+            fetchExpenses(offset, true);
+        }
+    }, [fetchExpenses, offset, loadingMore, hasMore]);
 
     const addExpense = useCallback(
         async (type: ExpenseType, amount: number, note?: string) => {
@@ -136,6 +156,9 @@ export function useExpenses() {
         getDayExpenseTotal,
         addExpense,
         deleteExpense,
-        refetch: fetchExpenses,
+        loadMore,
+        hasMore,
+        loadingMore,
+        refetch: () => fetchExpenses(0, false),
     };
 }
