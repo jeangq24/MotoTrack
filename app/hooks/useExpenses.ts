@@ -9,16 +9,24 @@ function generateId(): string {
 
 export function useExpenses() {
     const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
+    const [grandTotalState, setGrandTotalState] = useState<number>(0);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch all expenses from the API on mount
+    // Fetch expenses from the API on mount (paginated)
     const fetchExpenses = useCallback(async () => {
         try {
-            const res = await fetch('/api/expenses');
+            const res = await fetch('/api/expenses?limit=50');
             if (!res.ok) throw new Error('Error al cargar gastos');
-            const data: ExpenseRecord[] = await res.json();
-            setExpenses(data);
+            const data = await res.json();
+            
+            if (Array.isArray(data)) {
+                setExpenses(data);
+                setGrandTotalState(data.reduce((sum: number, e: ExpenseRecord) => sum + e.amount, 0));
+            } else {
+                setExpenses(data.records);
+                setGrandTotalState(data.grandTotal);
+            }
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
@@ -44,6 +52,7 @@ export function useExpenses() {
 
             // Optimistic update — show immediately in UI
             setExpenses((prev) => [record, ...prev]);
+            setGrandTotalState((prev) => prev + amount);
 
             try {
                 const res = await fetch('/api/expenses', {
@@ -53,11 +62,13 @@ export function useExpenses() {
                 });
                 if (!res.ok) {
                     setExpenses((prev) => prev.filter((e) => e.id !== record.id));
+                    setGrandTotalState((prev) => prev - amount);
                     const { error: apiError } = await res.json();
                     setError(apiError ?? 'Error al guardar');
                 }
             } catch {
                 setExpenses((prev) => prev.filter((e) => e.id !== record.id));
+                setGrandTotalState((prev) => prev - amount);
                 setError('Sin conexión. Intenta de nuevo.');
             }
 
@@ -68,17 +79,23 @@ export function useExpenses() {
 
     const deleteExpense = useCallback(
         async (id: string) => {
+            const toDelete = expenses.find(e => e.id === id);
+            const amountToSubtract = toDelete?.amount || 0;
+
             const prev = expenses;
             setExpenses((e) => e.filter((x) => x.id !== id));
+            setGrandTotalState((prevTotal) => prevTotal - amountToSubtract);
 
             try {
                 const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
                 if (!res.ok) {
                     setExpenses(prev);
+                    setGrandTotalState((prevTotal) => prevTotal + amountToSubtract);
                     setError('Error al eliminar');
                 }
             } catch {
                 setExpenses(prev);
+                setGrandTotalState((prevTotal) => prevTotal + amountToSubtract);
                 setError('Sin conexión. Intenta de nuevo.');
             }
         },
@@ -97,7 +114,7 @@ export function useExpenses() {
     const today = new Date().toISOString().split('T')[0];
     const todayExpenses = expenses.filter((e) => e.date === today);
     const todayExpenseTotal = todayExpenses.reduce((s, e) => s + e.amount, 0);
-    const grandExpenseTotal = expenses.reduce((s, e) => s + e.amount, 0);
+    const grandExpenseTotal = grandTotalState;
 
     const getDayExpenseTotal = useCallback(
         (date: string) =>
