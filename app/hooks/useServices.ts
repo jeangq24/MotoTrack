@@ -16,31 +16,51 @@ export function useServices() {
     const [grandTotalState, setGrandTotalState] = useState<number>(0);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
+    const [hasMore, setHasMore] = useState(true);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [offset, setOffset] = useState(0);
+    const limit = 50;
 
     // Fetch records from the API on mount (paginated)
-    const fetchRecords = useCallback(async () => {
+    const fetchRecords = useCallback(async (currentOffset = 0, isLoadMore = false) => {
+        if (isLoadMore) setLoadingMore(true);
         try {
-            const res = await fetch('/api/services?limit=50');
+            const res = await fetch(`/api/services?limit=${limit}&offset=${currentOffset}`);
             if (!res.ok) throw new Error('Error al cargar servicios');
             const data = await res.json();
             
-            if (Array.isArray(data)) {
-                setRecords(data);
-                setGrandTotalState(data.reduce((sum: number, r: ServiceRecord) => sum + r.price, 0));
+            const fetchedRecords = Array.isArray(data) ? data : (data.records || []);
+            
+            if (isLoadMore) {
+                setRecords(prev => {
+                    const existingIds = new Set(prev.map(r => r.id));
+                    const newUnique = fetchedRecords.filter((r: ServiceRecord) => !existingIds.has(r.id));
+                    return [...prev, ...newUnique];
+                });
             } else {
-                setRecords(data.records);
-                setGrandTotalState(data.grandTotal);
+                setRecords(fetchedRecords);
+                setGrandTotalState(Array.isArray(data) ? data.reduce((sum: number, r: ServiceRecord) => sum + r.price, 0) : data.grandTotal);
             }
+
+            setHasMore(fetchedRecords.length === limit);
+            setOffset(currentOffset + fetchedRecords.length);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
-            setLoaded(true);
+            if (!isLoadMore) setLoaded(true);
+            if (isLoadMore) setLoadingMore(false);
         }
-    }, []);
+    }, [limit]);
 
     useEffect(() => {
-        fetchRecords();
+        fetchRecords(0, false);
     }, [fetchRecords]);
+
+    const loadMore = useCallback(() => {
+        if (!loadingMore && hasMore) {
+            fetchRecords(offset, true);
+        }
+    }, [fetchRecords, offset, loadingMore, hasMore]);
 
     const addService = useCallback(async (type: ServiceType, price: number) => {
         const now = new Date();
@@ -135,6 +155,9 @@ export function useServices() {
         getDayTotal,
         addService,
         deleteService,
-        refetch: fetchRecords,
+        loadMore,
+        hasMore,
+        loadingMore,
+        refetch: () => fetchRecords(0, false),
     };
 }
