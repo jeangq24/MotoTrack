@@ -54,3 +54,41 @@ export const EXPENSE_EMOJIS: Record<ExpenseType, string> = {
 };
 
 export const EXPENSE_PRESET_AMOUNTS = [2000, 5000, 10000, 15000, 20000, 30000, 50000];
+
+// ─── Vehículos y Mantenimiento ──────────────────────────────────────────────────
+
+export interface Vehicle {
+    id: string;
+    brand: string;
+    model: string;
+    name: string;
+    current_km: number;
+    user_id?: string;
+    created_at?: string;
+}
+
+export interface MaintenanceRule {
+    id: string;
+    vehicle_id: string;
+    name: string;
+    interval_km: number;
+    last_service_km: number;
+    next_service_km: number;
+    created_at?: string;
+}
+
+export interface MaintenanceLog {
+    id: string;
+    rule_id: string;
+    km: number;
+    notes?: string;
+    created_at?: string;
+}
+
+export type MaintenanceStatusType = 'safe' | 'upcoming' | 'overdue';
+
+export interface MaintenanceStatus {
+    rule: MaintenanceRule;
+    status: MaintenanceStatusType;
+    remaining_km: number;
+}
