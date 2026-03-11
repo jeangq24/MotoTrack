@@ -167,22 +167,29 @@ export default function VehicleManager() {
 }
 
 function MaintenancePanel({ vehicle }: { vehicle: Vehicle }) {
-    const { statuses, loaded, error, addRule, deleteRule, markPerformed, refetch } = useMaintenance(vehicle.id);
+    const { statuses, loaded, error, addRule, deleteRule, markPerformed, refetch } = useMaintenance(vehicle);
     const [isAdding, setIsAdding] = useState(false);
     
     // Form rule payload
     const [name, setName] = useState('');
     const [intervalKm, setIntervalKm] = useState('');
     const [lastKm, setLastKm] = useState('');
+    const [warningRange, setWarningRange] = useState('');
 
     const handleAddRule = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!name || !intervalKm || !lastKm) return;
         
-        await addRule(name, parseInt(intervalKm, 10), parseInt(lastKm, 10));
+        await addRule(
+            name, 
+            parseInt(intervalKm, 10), 
+            parseInt(lastKm, 10), 
+            warningRange ? parseInt(warningRange, 10) : undefined
+        );
         setName('');
         setIntervalKm('');
         setLastKm(vehicle.current_km.toString()); // default auto complete helper
+        setWarningRange('');
         setIsAdding(false);
     };
 
@@ -226,9 +233,16 @@ function MaintenancePanel({ vehicle }: { vehicle: Vehicle }) {
                                 <input type="number" placeholder="Ej: 3000" min="1" required value={intervalKm} onChange={e=>setIntervalKm(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition" />
                             </div>
                             <div>
-                                <label className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Último cambio fue a (KM)</label>
+                                <label className="text-[10px] text-slate-400 font-bold uppercase block mb-1">Último cambio (KM)</label>
                                 <input type="number" placeholder="Ej: 12000" required value={lastKm} onChange={e=>setLastKm(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition" />
                             </div>
+                         </div>
+                         <div className="mt-1">
+                             <label className="text-[10px] text-slate-400 font-bold uppercase block mb-1 flex items-center justify-between">
+                                 Rango de Aviso / Tolerancia
+                                 <span className="text-slate-500 font-normal normal-case">(Opcional)</span>
+                             </label>
+                             <input type="number" placeholder="Ej: 500 (Te avisa 500 km antes)" min="1" value={warningRange} onChange={e=>setWarningRange(e.target.value)} className="w-full bg-slate-900 border border-slate-700 rounded-lg p-2.5 text-white placeholder-slate-500 text-sm focus:border-amber-400 focus:outline-none focus:ring-1 focus:ring-amber-400 transition" />
                          </div>
                          <button type="submit" className="w-full bg-amber-400 py-3 rounded-lg text-slate-900 font-bold mt-2 hover:bg-amber-300 transition active:scale-95">Guardar Criterio</button>
                     </form>
