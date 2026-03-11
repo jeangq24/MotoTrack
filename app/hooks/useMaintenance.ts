@@ -1,55 +1,55 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
-import { MaintenanceRule, MaintenanceStatus } from '../types';
+import { useState, useCallback, useEffect, useMemo } from 'react';
+import { MaintenanceRule, MaintenanceStatus, Vehicle } from '../types';
+import { calculateMaintenanceStatus } from '@/lib/maintenance';
 
 function generateId(): string {
     return crypto.randomUUID();
 }
 
-export function useMaintenance(vehicleId: string | null) {
-    const [statuses, setStatuses] = useState<MaintenanceStatus[]>([]);
+export function useMaintenance(vehicle: Vehicle | null) {
+    const [rules, setRules] = useState<MaintenanceRule[]>([]);
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const fetchMaintenance = useCallback(async () => {
-        if (!vehicleId) {
+        if (!vehicle) {
             setLoaded(true);
             return;
         }
 
         try {
-            const res = await fetch(`/api/vehicles/${vehicleId}/maintenance`);
+            const res = await fetch(`/api/vehicles/${vehicle.id}/maintenance`);
             if (!res.ok) throw new Error('Error al cargar mantenimientos');
-            const data: MaintenanceStatus[] = await res.json();
-            // Sort to show overdue and upcoming first
-            data.sort((a, b) => a.remaining_km - b.remaining_km);
-            setStatuses(data);
+            const data: MaintenanceRule[] = await res.json();
+            setRules(data);
         } catch (err) {
             setError(err instanceof Error ? err.message : 'Error desconocido');
         } finally {
             setLoaded(true);
         }
-    }, [vehicleId]);
+    }, [vehicle?.id]);
 
     useEffect(() => {
         fetchMaintenance();
     }, [fetchMaintenance]);
 
-    // Refresh function strictly for rules (doesn't trigger overall vehicle re-fetch but recalcs based heavily on DB side after an update or log action)
-    const refetch = () => {
+    // Refresh function strictly for rules
+    const refetch = useCallback(() => {
         fetchMaintenance();
-    };
+    }, [fetchMaintenance]);
 
-    const addRule = useCallback(async (name: string, interval_km: number, last_service_km: number) => {
-        if (!vehicleId) return;
+    const addRule = useCallback(async (name: string, interval_km: number, last_service_km: number, custom_warning_km?: number) => {
+        if (!vehicle) return;
 
         const rulePayload = {
             id: generateId(),
-            vehicle_id: vehicleId,
+            vehicle_id: vehicle.id,
             name,
             interval_km,
-            last_service_km
+            last_service_km,
+            custom_warning_km: custom_warning_km || 500
         };
 
         try {
@@ -67,10 +67,10 @@ export function useMaintenance(vehicleId: string | null) {
         } catch {
             setError('Sin conexión. Intenta de nuevo.');
         }
-    }, [vehicleId]);
+    }, [vehicle?.id, refetch]);
 
     const deleteRule = useCallback(async (id: string) => {
-        setStatuses(prev => prev.filter(s => s.rule.id !== id));
+        setRules(prev => prev.filter(r => r.id !== id));
         try {
             const res = await fetch(`/api/maintenance-rules/${id}`, { method: 'DELETE' });
             if (!res.ok) refetch(); // Rollback if failed by fetching the source truth
@@ -94,6 +94,13 @@ export function useMaintenance(vehicleId: string | null) {
             setError('No pudimos actualizar el registro de mantenimiento.');
         }
     }, []);
+
+    const statuses = useMemo(() => {
+        if (!vehicle) return [];
+        return rules
+            .map(rule => calculateMaintenanceStatus(rule, vehicle.current_km))
+            .sort((a, b) => a.remaining_km - b.remaining_km);
+    }, [rules, vehicle?.current_km]);
 
     return {
         statuses,

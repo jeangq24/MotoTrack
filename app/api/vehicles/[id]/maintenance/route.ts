@@ -13,25 +13,13 @@ export async function GET(
 
     const { id } = await params;
 
-    // Fetch vehicle for current_km
-    const { data: vehicle, error: vError } = await supabase
-        .from('vehicles')
-        .select('current_km')
-        .eq('id', id)
-        .single();
-
-    if (vError || !vehicle) return NextResponse.json({ error: 'Vehicle not found' }, { status: 404 });
-
     const { data: rules, error: rError } = await supabase
         .from('maintenance_rules')
         .select('*')
         .eq('vehicle_id', id)
-        .order('next_service_km', { ascending: true }); // Prioritize nearest
+        .order('next_service_km', { ascending: true });
 
     if (rError) return NextResponse.json({ error: rError.message }, { status: 500 });
 
-    // Use lib to calculate dynamic statuses
-    const statuses = (rules || []).map(rule => calculateMaintenanceStatus(rule, vehicle.current_km));
-
-    return NextResponse.json(statuses);
+    return NextResponse.json(rules || []);
 }
