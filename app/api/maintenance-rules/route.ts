@@ -21,6 +21,7 @@ export async function POST(request: Request) {
             interval_km: body.interval_km,
             last_service_km: body.last_service_km,
             next_service_km: next_service_km,
+            custom_warning_km: body.custom_warning_km || 500,
         })
         .select()
         .single();

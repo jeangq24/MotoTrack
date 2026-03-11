@@ -74,6 +74,7 @@ export interface MaintenanceRule {
     interval_km: number;
     last_service_km: number;
     next_service_km: number;
+    custom_warning_km?: number | null;
     created_at?: string;
 }
 
