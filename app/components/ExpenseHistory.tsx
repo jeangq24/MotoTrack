@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ExpenseRecord, EXPENSE_EMOJIS, EXPENSE_LABELS } from '../types';
+import { ExpenseRecord, ExpenseType, EXPENSE_LABELS } from '../types';
+import { Fuel, Coffee, Wrench, MoreHorizontal, ChevronDown, Trash2 } from 'lucide-react';
+
+const EXPENSE_ICONS: Record<ExpenseType, React.ReactNode> = {
+    gasolina: <Fuel className="w-6 h-6" strokeWidth={1.5} />,
+    comida: <Coffee className="w-6 h-6" strokeWidth={1.5} />,
+    mantenimiento: <Wrench className="w-6 h-6" strokeWidth={1.5} />,
+    otro: <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />,
+};
 
 interface ExpenseHistoryProps {
     byDate: () => Record<string, ExpenseRecord[]>;
@@ -40,24 +48,28 @@ interface DeleteConfirmProps {
 function DeleteConfirm({ record, onConfirm, onCancel }: DeleteConfirmProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                <p className="text-xl font-bold text-white text-center mb-2">¿Eliminar gasto?</p>
-                <p className="text-slate-400 text-center text-sm mb-5">
-                    {EXPENSE_EMOJIS[record.type]} {EXPENSE_LABELS[record.type]} —{' '}
-                    <span className="text-red-400 font-semibold">{formatCOP(record.amount)}</span>
-                </p>
+            <div className="bg-slate-900/90 border border-white/10 rounded-[24px] p-6 w-full max-w-sm shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-200">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Trash2 className="w-6 h-6 text-red-500" />
+                </div>
+                <p className="text-xl font-black text-white text-center mb-2 tracking-tight">¿Eliminar gasto?</p>
+                <div className="flex items-center justify-center gap-2 mb-6 text-slate-300 bg-slate-800/50 py-3 rounded-2xl border border-white/5">
+                    <span className="text-red-400">{EXPENSE_ICONS[record.type]}</span>
+                    <span className="font-semibold">{EXPENSE_LABELS[record.type]}</span>
+                    <span className="text-red-400 font-bold ml-1">{formatCOP(record.amount)}</span>
+                </div>
                 <div className="flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="flex-1 py-3 rounded-xl bg-slate-700 text-slate-200 font-semibold transition hover:bg-slate-600 active:scale-95"
+                        className="flex-1 py-3.5 rounded-xl bg-slate-800 text-slate-300 font-bold transition-all hover:bg-slate-700 active:scale-95 border border-white/5"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold transition hover:bg-red-400 active:scale-95"
+                        className="flex-1 py-3.5 rounded-xl bg-red-500 text-white font-bold transition-all hover:bg-red-400 active:scale-95 shadow-lg shadow-red-500/20"
                     >
-                        🗑️ Eliminar
+                        Eliminar
                     </button>
                 </div>
             </div>
@@ -149,23 +161,21 @@ export default function ExpenseHistory({
                     const isExpanded = expandedDates.has(date);
 
                     return (
-                        <div key={date} className="bg-slate-800/60 rounded-2xl overflow-hidden border border-slate-700/50">
+                        <div key={date} className="bg-slate-900/60 rounded-3xl overflow-hidden border border-white/5 shadow-lg">
                             {/* Day header */}
                             <button
                                 onClick={() => toggleDate(date)}
-                                className="w-full flex items-center justify-between px-4 py-4 hover:bg-slate-700/30 transition active:bg-slate-700/50"
+                                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors duration-300 active:bg-white/10"
                             >
                                 <div className="text-left">
-                                    <p className="text-white font-bold capitalize">{formatDate(date)}</p>
-                                    <p className="text-slate-400 text-xs mt-0.5">
+                                    <p className="text-white font-bold capitalize tracking-wide">{formatDate(date)}</p>
+                                    <p className="text-slate-400 text-xs mt-0.5 tracking-wider uppercase font-medium">
                                         {dayExpenses.length} gasto{dayExpenses.length !== 1 ? 's' : ''}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="text-red-400 font-black text-lg">-{formatCOP(total)}</span>
-                                    <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                                        ▼
-                                    </span>
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                             </button>
 
@@ -179,9 +189,11 @@ export default function ExpenseHistory({
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{EXPENSE_EMOJIS[expense.type]}</span>
+                                                <div className="w-10 h-10 rounded-full bg-slate-800 text-red-500 flex items-center justify-center border border-white/5 shadow-inner">
+                                                    {EXPENSE_ICONS[expense.type]}
+                                                </div>
                                                 <div>
-                                                    <p className="text-slate-200 font-semibold text-sm">
+                                                    <p className="text-slate-200 font-bold text-sm">
                                                         {EXPENSE_LABELS[expense.type]}
                                                     </p>
                                                     <p className="text-slate-500 text-xs">
@@ -192,14 +204,14 @@ export default function ExpenseHistory({
                                                     </p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-red-400 font-bold">-{formatCOP(expense.amount)}</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-red-400 font-black">-{formatCOP(expense.amount)}</span>
                                                 <button
                                                     onClick={() => setConfirmRecord(expense)}
-                                                    className="p-2 rounded-lg bg-slate-700/60 text-slate-400 hover:bg-red-500/20 hover:text-red-400 transition active:scale-90"
+                                                    className="w-10 h-10 rounded-xl bg-slate-800/50 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 active:scale-90 flex items-center justify-center border border-white/5"
                                                     aria-label="Eliminar"
                                                 >
-                                                    🗑️
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>

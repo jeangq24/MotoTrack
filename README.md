@@ -28,9 +28,9 @@ Registro en 3 toques:
 - **🛠️ Servicios:** Domicilios, Envíos, Pasajeros o Personalizados.
 - **⛽ Gastos:** Gasolina, Comida, Mantenimiento preventivo.
 - **🏍️ Taller y Mantenimiento:** Sistema dinámico para el seguimiento de repuestos y tareas de desgaste. Define tus propias reglas (Ej: Cambio de lubricante cada 3,000 km) y MotoTrack calcula y te advierte automáticamente el estado (Seguro, Próximo o Vencido) en base al odómetro.
-- **📱 UX para Móviles:** Botones XL, alto contraste (modo oscuro nativo) y navegación inferior. Funciona perfecto con una mano o mientras usas guantes (sin requerir teclado).
-- **📊 Estadísticas en Vivo:** Tarjetas que calculan _Ingresos Totales_, _Gastos Diarios_ y _Ganancia Neta (Libre)_ agrupado por hoy y por el acumulado histórico.
-- **🔒 Nube Segura:** Inicio de sesión con un clic usando Google. Tus datos están aislados (cada usuario solo ve lo suyo) mediante `Row Level Security (RLS)` de PostgreSQL.
+- **📱 UX Premium y Mobile-First:** Interfaz Dark Glassmorphism de alta gama integrada con iconos vectoriales fluidos (Lucide React). Botones diseñados para pulgares, alto contraste (modo oscuro nativo) y navegación inferor tipo iOS.
+- **📊 Estadísticas en Vivo:** Tarjetas estilo Fintech que calculan _Producido_, _Gastos Diarios_ y _Balance Neto Libre_ agrupado por hoy y por el acumulado histórico.
+- **🔒 Nube Segura:** Inicio de sesión con validación OTP (Autenticación via correo/códigos sin contraseña). Tus datos están aislados mediante `Row Level Security (RLS)` de PostgreSQL, sincronizando todo al instante respaldado por Supabase.
 
 ---
 
@@ -54,29 +54,11 @@ NEXT_PUBLIC_SUPABASE_URL=https://tu-id-de-proyecto.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key-publica
 ```
 
-### 3. Ejecutar las tablas SQL
-En el SQL Editor de tu proyecto de Supabase, ejecuta los comandos para crear las tablas `services` y `expenses`, seguido de las políticas de seguridad (RLS).
+### 3. Ejecutar la Base de Datos
+En el SQL Editor de tu proyecto de Supabase, **solo necesitas ejecutar un archivo:**
+Abre el archivo `supabase_init_production.sql` que se encuentra en la raíz, cópialo y ejecútalo entero. Este script se encargará de crear las tablas, relaciones, políticas de seguridad (RLS), y funciones optimizadas para el rendimiento (Total de gastos y producidos) en un solo paso (A partir de la v1.3.0).
 
-### 4. Funciones de Base de Datos (Optimización v1.1.0)
-A partir de la versión v1.1.0, la app aplica una optimización delegando el cálculo matemático del histórico general directo a tu base de datos y paginando el historial, para evitar costos altos de lecturas repetidas. **Debes ejecutar este código SQL en el editor de tu proyecto en Supabase para habilitarlo**:
-
-```sql
-create or replace function get_services_total(user_uuid uuid)
-returns numeric language sql security definer as $$
-  select coalesce(sum(price), 0) from services where user_id = user_uuid;
-$$;
-
-create or replace function get_expenses_total(user_uuid uuid)
-returns numeric language sql security definer as $$
-  select coalesce(sum(amount), 0) from expenses where user_id = user_uuid;
-$$;
-```
-
-### 5. Configurar Módulo de Mantenimientos (Novedad v1.2.0)
-El sistema dinámico para calcular desgaste incluye tablas nuevas (vehicles, rules, logs) y seguridad. Para tener este feature funcional:
-Abre en la raíz del proyecto el archivo `supabase_v1.2.0_maintenance.sql`, cópialo y ejecútalo entero en tu SQL Editor de Supabase.
-
-### 6. Arrancar en desarrollo
+### 4. Arrancar en desarrollo
 ```bash
 npm run dev
 ```
