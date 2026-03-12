@@ -1,7 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { ServiceRecord, SERVICE_EMOJIS, SERVICE_LABELS } from '../types';
+import { ServiceRecord, ServiceType, SERVICE_LABELS } from '../types';
+import { Bike, Package, User, MoreHorizontal, ChevronDown, Trash2 } from 'lucide-react';
+
+const SERVICE_ICONS: Record<ServiceType, React.ReactNode> = {
+    domicilio: <Bike className="w-6 h-6" strokeWidth={1.5} />,
+    envio: <Package className="w-6 h-6" strokeWidth={1.5} />,
+    pasajero: <User className="w-6 h-6" strokeWidth={1.5} />,
+    otro: <MoreHorizontal className="w-6 h-6" strokeWidth={1.5} />,
+};
 
 interface HistoryViewProps {
     byDate: () => Record<string, ServiceRecord[]>;
@@ -47,24 +55,28 @@ interface DeleteConfirmProps {
 function DeleteConfirm({ record, onConfirm, onCancel }: DeleteConfirmProps) {
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-            <div className="bg-slate-800 border border-slate-600 rounded-2xl p-6 w-full max-w-sm shadow-2xl">
-                <p className="text-xl font-bold text-white text-center mb-2">¿Eliminar registro?</p>
-                <p className="text-slate-400 text-center text-sm mb-5">
-                    {SERVICE_EMOJIS[record.type]} {SERVICE_LABELS[record.type]} —{' '}
-                    <span className="text-amber-400 font-semibold">{formatCOP(record.price)}</span>
-                </p>
+            <div className="bg-slate-900/90 border border-white/10 rounded-[24px] p-6 w-full max-w-sm shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-200">
+                <div className="w-12 h-12 rounded-full bg-red-500/10 flex items-center justify-center mx-auto mb-4">
+                    <Trash2 className="w-6 h-6 text-red-500" />
+                </div>
+                <p className="text-xl font-black text-white text-center mb-2 tracking-tight">¿Eliminar registro?</p>
+                <div className="flex items-center justify-center gap-2 mb-6 text-slate-300 bg-slate-800/50 py-3 rounded-2xl border border-white/5">
+                    <span className="text-emerald-400">{SERVICE_ICONS[record.type]}</span>
+                    <span className="font-semibold">{SERVICE_LABELS[record.type]}</span>
+                    <span className="text-emerald-400 font-bold ml-1">{formatCOP(record.price)}</span>
+                </div>
                 <div className="flex gap-3">
                     <button
                         onClick={onCancel}
-                        className="flex-1 py-3 rounded-xl bg-slate-700 text-slate-200 font-semibold transition hover:bg-slate-600 active:scale-95"
+                        className="flex-1 py-3.5 rounded-xl bg-slate-800 text-slate-300 font-bold transition-all hover:bg-slate-700 active:scale-95 border border-white/5"
                     >
                         Cancelar
                     </button>
                     <button
                         onClick={onConfirm}
-                        className="flex-1 py-3 rounded-xl bg-red-500 text-white font-bold transition hover:bg-red-400 active:scale-95"
+                        className="flex-1 py-3.5 rounded-xl bg-red-500 text-white font-bold transition-all hover:bg-red-400 active:scale-95 shadow-lg shadow-red-500/20"
                     >
-                        🗑️ Eliminar
+                        Eliminar
                     </button>
                 </div>
             </div>
@@ -156,23 +168,21 @@ export default function HistoryView({
                     const isExpanded = expandedDates.has(date);
 
                     return (
-                        <div key={date} className="bg-slate-800/60 rounded-2xl overflow-hidden border border-slate-700/50">
-                            {/* Day Header */}
+                        <div key={date} className="bg-slate-900/60 rounded-3xl overflow-hidden border border-white/5 shadow-lg">
+                            {/* Day header */}
                             <button
                                 onClick={() => toggleDate(date)}
-                                className="w-full flex items-center justify-between px-4 py-4 hover:bg-slate-700/30 transition active:bg-slate-700/50"
+                                className="w-full flex items-center justify-between px-5 py-4 hover:bg-white/5 transition-colors duration-300 active:bg-white/10"
                             >
                                 <div className="text-left">
-                                    <p className="text-white font-bold capitalize">{formatDate(date)}</p>
-                                    <p className="text-slate-400 text-xs mt-0.5">
+                                    <p className="text-white font-bold capitalize tracking-wide">{formatDate(date)}</p>
+                                    <p className="text-slate-400 text-xs mt-0.5 tracking-wider uppercase font-medium">
                                         {dayRecords.length} servicio{dayRecords.length !== 1 ? 's' : ''}
                                     </p>
                                 </div>
                                 <div className="flex items-center gap-3">
                                     <span className="text-emerald-400 font-black text-lg">{formatCOP(total)}</span>
-                                    <span className={`text-slate-400 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}>
-                                        ▼
-                                    </span>
+                                    <ChevronDown className={`w-5 h-5 text-slate-500 transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`} />
                                 </div>
                             </button>
 
@@ -186,22 +196,24 @@ export default function HistoryView({
                                                 }`}
                                         >
                                             <div className="flex items-center gap-3">
-                                                <span className="text-2xl">{SERVICE_EMOJIS[record.type]}</span>
+                                                <div className="w-10 h-10 rounded-full bg-slate-800 text-emerald-400 flex items-center justify-center border border-white/5 shadow-inner">
+                                                    {SERVICE_ICONS[record.type]}
+                                                </div>
                                                 <div>
-                                                    <p className="text-slate-200 font-semibold text-sm">
+                                                    <p className="text-slate-200 font-bold text-sm">
                                                         {SERVICE_LABELS[record.type]}
                                                     </p>
                                                     <p className="text-slate-500 text-xs">{formatTime(record.timestamp)}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-3">
-                                                <span className="text-amber-400 font-bold">{formatCOP(record.price)}</span>
+                                            <div className="flex items-center gap-4">
+                                                <span className="text-emerald-400 font-black">+{formatCOP(record.price)}</span>
                                                 <button
                                                     onClick={() => setConfirmRecord(record)}
-                                                    className="p-2 rounded-lg bg-slate-700/60 text-slate-400 hover:bg-red-500/20 hover:text-red-400 transition active:scale-90"
+                                                    className="w-10 h-10 rounded-xl bg-slate-800/50 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 active:scale-90 flex items-center justify-center border border-white/5"
                                                     aria-label="Eliminar"
                                                 >
-                                                    🗑️
+                                                    <Trash2 className="w-4 h-4" />
                                                 </button>
                                             </div>
                                         </div>

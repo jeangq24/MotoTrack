@@ -23,22 +23,25 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen flex flex-col items-center justify-center bg-slate-900 p-4 relative overflow-hidden">
-            {/* Background decorations */}
-            <div className="absolute top-1/4 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl" />
-            <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+        <main className="min-h-screen flex flex-col items-center justify-center bg-slate-950 p-6 relative overflow-hidden">
+            {/* Background ambient lighting */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-amber-500/10 rounded-full blur-[120px] pointer-events-none" />
+            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] bg-emerald-500/10 rounded-full blur-[120px] pointer-events-none" />
 
-            <div className="w-full max-w-sm z-10 text-center flex flex-col gap-6">
-                <div>
-                    <span className="text-6xl mb-4 block"><img src="/logo_mototrack.png" alt="MotoTrack Logo" className="rounded-lg mx-auto" /></span>
-                    <p className="text-slate-400 font-medium tracking-wide">
-                        Registra servicios diarios de una forma rápida y calcula tus ingresos reales.
+            <div className="w-full max-w-sm z-10 flex flex-col gap-8 animate-in fade-in slide-in-from-bottom-8 duration-700">
+                <div className="text-center">
+                    <div className="w-20 h-20 rounded-3xl shadow-2xl shadow-black/40 flex items-center justify-center mx-auto mb-6 transform rotate-3 overflow-hidden border border-white/5 bg-slate-900/50">
+                        <img src="/logo_mototrack.png" alt="MotoTrack Logo" className="w-full h-full object-cover" />
+                    </div>
+                    <h1 className="text-3xl font-black text-white tracking-tight mb-2">MotoTrack</h1>
+                    <p className="text-slate-400 text-sm font-medium tracking-wide">
+                        Tu copiloto financiero inteligente.
                     </p>
                 </div>
 
-                <div className="bg-slate-800/60 p-6 rounded-3xl border border-slate-700/50 backdrop-blur-xl shadow-2xl mt-4">
-                    <p className="text-slate-300 text-sm mb-6 font-semibold" id="login-description">
-                        Inicia sesión para guardar tu historial en la nube y acceder desde cualquier dispositivo
+                <div className="bg-slate-900/40 p-8 rounded-[32px] border border-white/5 backdrop-blur-2xl shadow-2xl shadow-black/40">
+                    <p className="text-slate-300 text-sm mb-8 font-medium text-center leading-relaxed" id="login-description">
+                        Inicia sesión para guardar tus registros de forma segura y sincronizarlos en la nube.
                     </p>
 
                     <button
@@ -77,8 +80,8 @@ export default function LoginPage() {
             </div>
 
             {/* Signature */}
-            <div className="absolute bottom-6 z-10 text-slate-500 text-xs font-semibold tracking-widest uppercase">
-                Desarrollado por <a href="https://www.linkedin.com/in/jeangarzon/" target="_blank" rel="noopener noreferrer" className="text-amber-400 font-bold hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 rounded px-1">JGDev</a>
+            <div className="absolute bottom-8 z-10 text-slate-600 text-[10px] font-bold tracking-[0.2em] uppercase">
+                by <a href="https://www.linkedin.com/in/jeangarzon/" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors duration-300 ml-1">JGDev</a>
             </div>
         </main>
     );
