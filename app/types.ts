@@ -23,7 +23,7 @@ export const SERVICE_EMOJIS: Record<ServiceType, string> = {
     otro: '➕',
 };
 
-export const PRESET_PRICES = [3000, 5000, 7000, 8000, 10000, 12000, 15000];
+export const PRESET_PRICES = [5000, 7000, 8000, 10000, 12000];
 
 // ─── Gastos ───────────────────────────────────────────────────────────────────
 
@@ -53,7 +53,7 @@ export const EXPENSE_EMOJIS: Record<ExpenseType, string> = {
     otro: '🧾',
 };
 
-export const EXPENSE_PRESET_AMOUNTS = [2000, 5000, 10000, 15000, 20000, 30000, 50000];
+export const EXPENSE_PRESET_AMOUNTS = [5000, 10000, 15000, 20000, 30000];
 
 // ─── Vehículos y Mantenimiento ──────────────────────────────────────────────────
 
