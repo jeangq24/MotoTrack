@@ -70,6 +70,7 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         const isSelected = selectedType === type;
                         return (
                             <button
+                                type="button"
                                 key={type}
                                 role="radio"
                                 aria-checked={isSelected}
@@ -99,6 +100,7 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         const isSelected = !showCustom && selectedAmount === amount;
                         return (
                             <button
+                                type="button"
                                 key={amount}
                                 role="radio"
                                 aria-checked={isSelected}
@@ -117,6 +119,7 @@ export default function ExpenseForm({ onSave }: ExpenseFormProps) {
                         );
                     })}
                     <button
+                        type="button"
                         role="radio"
                         aria-checked={showCustom}
                         onClick={() => {
