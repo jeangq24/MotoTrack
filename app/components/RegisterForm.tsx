@@ -64,6 +64,7 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                         const isSelected = selectedType === type;
                         return (
                             <button
+                                type="button"
                                 key={type}
                                 role="radio"
                                 aria-checked={isSelected}
@@ -93,6 +94,7 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                         const isSelected = !showCustom && selectedPrice === price;
                         return (
                             <button
+                                type="button"
                                 key={price}
                                 role="radio"
                                 aria-checked={isSelected}
@@ -112,6 +114,7 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                     })}
                     {/* Custom button */}
                     <button
+                        type="button"
                         role="radio"
                         aria-checked={showCustom}
                         onClick={() => {

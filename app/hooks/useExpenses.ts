@@ -7,6 +7,20 @@ function generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
+function getLocalDateStr(date: Date = new Date()): string {
+    const tzOffset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+}
+
+function getLocalISOString(date: Date = new Date()): string {
+    const tzOffset = date.getTimezoneOffset();
+    const offsetHours = Math.floor(Math.abs(tzOffset) / 60).toString().padStart(2, '0');
+    const offsetMinutes = (Math.abs(tzOffset) % 60).toString().padStart(2, '0');
+    const sign = tzOffset > 0 ? '-' : '+';
+    const localISO = new Date(date.getTime() - tzOffset * 60000).toISOString().slice(0, -1);
+    return `${localISO}${sign}${offsetHours}:${offsetMinutes}`;
+}
+
 export function useExpenses() {
     const [expenses, setExpenses] = useState<ExpenseRecord[]>([]);
     const [grandTotalState, setGrandTotalState] = useState<number>(0);
@@ -66,8 +80,8 @@ export function useExpenses() {
                 type,
                 amount,
                 note,
-                timestamp: now.toISOString(),
-                date: now.toISOString().split('T')[0],
+                timestamp: getLocalISOString(now),
+                date: getLocalDateStr(now),
             };
 
             // Optimistic update — show immediately in UI
@@ -131,7 +145,7 @@ export function useExpenses() {
         return map;
     }, [expenses]);
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateStr();
     const todayExpenses = expenses.filter((e) => e.date === today);
     const todayExpenseTotal = todayExpenses.reduce((s, e) => s + e.amount, 0);
     const grandExpenseTotal = grandTotalState;
