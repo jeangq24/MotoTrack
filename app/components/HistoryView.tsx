@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { ServiceRecord, ServiceType, SERVICE_LABELS } from '../types';
-import { Bike, Package, User, MoreHorizontal, ChevronDown, Trash2 } from 'lucide-react';
+import { Bike, Package, User, MoreHorizontal, ChevronDown, Trash2, CheckCircle2 } from 'lucide-react';
 
 const SERVICE_ICONS: Record<ServiceType, React.ReactNode> = {
     domicilio: <Bike className="w-6 h-6" strokeWidth={1.5} />,
@@ -16,6 +16,7 @@ interface HistoryViewProps {
     sortedDates: string[];
     getDayTotal: (date: string) => number;
     onDelete: (id: string) => void;
+    onUpdate: (id: string, updates: Partial<ServiceRecord>) => void;
     loadMore?: () => void;
     hasMore?: boolean;
     loadingMore?: boolean;
@@ -24,16 +25,15 @@ interface HistoryViewProps {
 const formatCOP = (n: number) => '$' + n.toLocaleString('es-CO');
 
 function formatDate(dateStr: string): string {
+    const formatter = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' });
+    const todayStr = formatter.format(new Date());
+    const yesterdayStr = formatter.format(new Date(Date.now() - 86400000));
+
+    if (dateStr === todayStr) return '📅 Hoy';
+    if (dateStr === yesterdayStr) return '📅 Ayer';
+
     const [year, month, day] = dateStr.split('-').map(Number);
     const d = new Date(year, month - 1, day);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-
-    if (d.getTime() === today.getTime()) return '📅 Hoy';
-    if (d.getTime() === yesterday.getTime()) return '📅 Ayer';
-
     return d.toLocaleDateString('es-CO', {
         weekday: 'long',
         day: 'numeric',
@@ -43,7 +43,20 @@ function formatDate(dateStr: string): string {
 
 function formatTime(isoStr: string): string {
     const d = new Date(isoStr);
-    return d.toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    return d.toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
+}
+
+function getLocalDateStr(date: Date = new Date()): string {
+    return new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' }).format(date);
+}
+
+function getLocalISOString(date: Date = new Date()): string {
+    const tzDateStr = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'America/Bogota',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).format(date).replace(' ', 'T');
+    return `${tzDateStr}-05:00`;
 }
 
 interface DeleteConfirmProps {
@@ -63,7 +76,7 @@ function DeleteConfirm({ record, onConfirm, onCancel }: DeleteConfirmProps) {
                 <div className="flex items-center justify-center gap-2 mb-6 text-slate-300 bg-slate-800/50 py-3 rounded-2xl border border-white/5">
                     <span className="text-emerald-400">{SERVICE_ICONS[record.type]}</span>
                     <span className="font-semibold">{SERVICE_LABELS[record.type]}</span>
-                    <span className="text-emerald-400 font-bold ml-1">{formatCOP(record.price)}</span>
+                    <span className="text-emerald-400 font-bold ml-1">{formatCOP(record.price || 0)}</span>
                 </div>
                 <div className="flex gap-3">
                     <button
@@ -84,16 +97,72 @@ function DeleteConfirm({ record, onConfirm, onCancel }: DeleteConfirmProps) {
     );
 }
 
+interface CompleteConfirmProps {
+    record: ServiceRecord;
+    onConfirm: (finalPrice: number) => void;
+    onCancel: () => void;
+}
+
+function CompleteConfirm({ record, onConfirm, onCancel }: CompleteConfirmProps) {
+    const [priceStr, setPriceStr] = useState('');
+    const isValid = parseInt(priceStr, 10) > 0;
+    
+    return (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
+            <div className="bg-slate-900/90 border border-white/10 rounded-[24px] p-6 w-full max-w-sm shadow-2xl backdrop-blur-xl animate-in zoom-in-95 duration-200">
+                <div className="w-12 h-12 rounded-full bg-blue-500/10 flex items-center justify-center mx-auto mb-4">
+                    <CheckCircle2 className="w-6 h-6 text-blue-400" />
+                </div>
+                <p className="text-xl font-black text-white text-center mb-2 tracking-tight">Finalizar Servicio</p>
+                <div className="flex items-center justify-center gap-2 mb-4 text-slate-300 bg-slate-800/50 py-3 rounded-2xl border border-white/5">
+                    <span className="text-emerald-400">{SERVICE_ICONS[record.type]}</span>
+                    <span className="font-semibold">{SERVICE_LABELS[record.type]}</span>
+                </div>
+                
+                <div className="mb-6 relative">
+                    <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold" aria-hidden="true">$</span>
+                    <input
+                        type="number"
+                        inputMode="numeric"
+                        placeholder="Valor cobrado"
+                        value={priceStr}
+                        onChange={(e) => setPriceStr(e.target.value.replace(/\D/g, ''))}
+                        className="w-full pl-8 pr-4 py-4 rounded-xl bg-slate-950/50 text-white text-lg font-bold border border-white/10 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                    />
+                </div>
+
+                <div className="flex gap-3">
+                    <button
+                        onClick={onCancel}
+                        className="flex-1 py-3.5 rounded-xl bg-slate-800 text-slate-300 font-bold transition-all hover:bg-slate-700 active:scale-95 border border-white/5"
+                    >
+                        Cancelar
+                    </button>
+                    <button
+                        onClick={() => onConfirm(parseInt(priceStr, 10))}
+                        disabled={!isValid}
+                        className={`flex-1 py-3.5 rounded-xl font-bold transition-all shadow-lg ${isValid ? 'bg-blue-500 text-white hover:bg-blue-400 active:scale-95 shadow-blue-500/20' : 'bg-slate-800 text-slate-500 opacity-50 cursor-not-allowed border border-white/5'}`}
+                    >
+                        Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function HistoryView({
     byDate,
     sortedDates,
     getDayTotal,
     onDelete,
+    onUpdate,
     loadMore,
     hasMore,
     loadingMore,
 }: HistoryViewProps) {
     const [confirmRecord, setConfirmRecord] = useState<ServiceRecord | null>(null);
+    const [completeRecord, setCompleteRecord] = useState<ServiceRecord | null>(null);
     const [expandedDates, setExpandedDates] = useState<Set<string>>(
         () => new Set(sortedDates.slice(0, 1)) // expand today by default
     );
@@ -161,6 +230,23 @@ export default function HistoryView({
                 />
             )}
 
+            {completeRecord && (
+                <CompleteConfirm
+                    record={completeRecord}
+                    onConfirm={(finalPrice) => {
+                        const now = new Date();
+                        onUpdate(completeRecord.id, { 
+                            status: 'completed', 
+                            price: finalPrice,
+                            timestamp: getLocalISOString(now),
+                            date: getLocalDateStr(now)
+                        });
+                        setCompleteRecord(null);
+                    }}
+                    onCancel={() => setCompleteRecord(null)}
+                />
+            )}
+
             <div className="flex flex-col gap-3">
                 {sortedDates.map((date) => {
                     const dayRecords = groups[date] || [];
@@ -206,8 +292,23 @@ export default function HistoryView({
                                                     <p className="text-slate-500 text-xs">{formatTime(record.timestamp)}</p>
                                                 </div>
                                             </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className="text-emerald-400 font-black">+{formatCOP(record.price)}</span>
+                                            <div className="flex items-center gap-3">
+                                                {record.status === 'scheduled' ? (
+                                                    <>
+                                                        <span className="text-blue-400 font-bold text-[10px] uppercase tracking-wider bg-blue-400/10 px-2 py-1 rounded-md">
+                                                            Prog.
+                                                        </span>
+                                                        <button
+                                                            onClick={() => setCompleteRecord(record)}
+                                                            className="w-10 h-10 rounded-xl bg-blue-400/10 text-blue-400 hover:bg-blue-400/20 transition-all duration-300 active:scale-90 flex items-center justify-center border border-blue-400/20"
+                                                            aria-label="Completar"
+                                                        >
+                                                            <CheckCircle2 className="w-5 h-5" />
+                                                        </button>
+                                                    </>
+                                                ) : (
+                                                    <span className="text-emerald-400 font-black">+{formatCOP(record.price || 0)}</span>
+                                                )}
                                                 <button
                                                     onClick={() => setConfirmRecord(record)}
                                                     className="w-10 h-10 rounded-xl bg-slate-800/50 text-slate-500 hover:bg-red-500/10 hover:text-red-400 transition-all duration-300 active:scale-90 flex items-center justify-center border border-white/5"

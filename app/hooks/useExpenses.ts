@@ -2,23 +2,23 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { ExpenseRecord, ExpenseType } from '../types';
+import { syncManager } from '../utils/syncManager';
 
 function generateId(): string {
     return Date.now().toString(36) + Math.random().toString(36).slice(2);
 }
 
 function getLocalDateStr(date: Date = new Date()): string {
-    const tzOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - tzOffset).toISOString().split('T')[0];
+    return new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' }).format(date);
 }
 
 function getLocalISOString(date: Date = new Date()): string {
-    const tzOffset = date.getTimezoneOffset();
-    const offsetHours = Math.floor(Math.abs(tzOffset) / 60).toString().padStart(2, '0');
-    const offsetMinutes = (Math.abs(tzOffset) % 60).toString().padStart(2, '0');
-    const sign = tzOffset > 0 ? '-' : '+';
-    const localISO = new Date(date.getTime() - tzOffset * 60000).toISOString().slice(0, -1);
-    return `${localISO}${sign}${offsetHours}:${offsetMinutes}`;
+    const tzDateStr = new Intl.DateTimeFormat('sv-SE', {
+        timeZone: 'America/Bogota',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).format(date).replace(' ', 'T');
+    return `${tzDateStr}-05:00`;
 }
 
 export function useExpenses() {
@@ -39,8 +39,24 @@ export function useExpenses() {
             if (!res.ok) throw new Error('Error al cargar gastos');
             const data = await res.json();
             
-            const fetchedRecords = Array.isArray(data) ? data : (data.records || []);
+            let fetchedRecords = Array.isArray(data) ? data : (data.records || []);
             
+            // Apply any pending offline actions locally
+            const queue = syncManager.getQueue();
+            const expenseActions = queue.filter(q => q.endpoint.includes('/api/expenses'));
+            
+            for (const q of expenseActions) {
+                if (q.method === 'POST' && q.payload) {
+                    fetchedRecords.unshift(q.payload as ExpenseRecord);
+                } else if (q.method === 'DELETE') {
+                    const delId = q.endpoint.split('/').pop();
+                    fetchedRecords = fetchedRecords.filter((e: ExpenseRecord) => e.id !== delId);
+                }
+            }
+            
+            // Re-sort just in case
+            fetchedRecords.sort((a: ExpenseRecord, b: ExpenseRecord) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
             if (isLoadMore) {
                 setExpenses(prev => {
                     const existingIds = new Set(prev.map(e => e.id));
@@ -49,7 +65,7 @@ export function useExpenses() {
                 });
             } else {
                 setExpenses(fetchedRecords);
-                setGrandTotalState(Array.isArray(data) ? data.reduce((sum: number, e: ExpenseRecord) => sum + e.amount, 0) : data.grandTotal);
+                setGrandTotalState(fetchedRecords.reduce((sum: number, e: ExpenseRecord) => sum + e.amount, 0));
             }
 
             setHasMore(fetchedRecords.length === limit);
@@ -64,6 +80,10 @@ export function useExpenses() {
 
     useEffect(() => {
         fetchExpenses(0, false);
+
+        const handleSyncEvent = () => fetchExpenses(0, false);
+        window.addEventListener('mototrack_synced', handleSyncEvent);
+        return () => window.removeEventListener('mototrack_synced', handleSyncEvent);
     }, [fetchExpenses]);
 
     const loadMore = useCallback(() => {
@@ -88,6 +108,15 @@ export function useExpenses() {
             setExpenses((prev) => [record, ...prev]);
             setGrandTotalState((prev) => prev + amount);
 
+            if (!navigator.onLine) {
+                syncManager.addAction({
+                    endpoint: '/api/expenses',
+                    method: 'POST',
+                    payload: record
+                });
+                return record;
+            }
+
             try {
                 const res = await fetch('/api/expenses', {
                     method: 'POST',
@@ -101,9 +130,13 @@ export function useExpenses() {
                     setError(apiError ?? 'Error al guardar');
                 }
             } catch {
-                setExpenses((prev) => prev.filter((e) => e.id !== record.id));
-                setGrandTotalState((prev) => prev - amount);
-                setError('Sin conexión. Intenta de nuevo.');
+                // Offline Mode: Queue the mutation instead of rolling back
+                syncManager.addAction({
+                    endpoint: '/api/expenses',
+                    method: 'POST',
+                    payload: record
+                });
+                // Optimistic UI keeps the change
             }
 
             return record;
@@ -120,6 +153,14 @@ export function useExpenses() {
             setExpenses((e) => e.filter((x) => x.id !== id));
             setGrandTotalState((prevTotal) => prevTotal - amountToSubtract);
 
+            if (!navigator.onLine) {
+                syncManager.addAction({
+                    endpoint: `/api/expenses/${id}`,
+                    method: 'DELETE'
+                });
+                return;
+            }
+
             try {
                 const res = await fetch(`/api/expenses/${id}`, { method: 'DELETE' });
                 if (!res.ok) {
@@ -128,9 +169,11 @@ export function useExpenses() {
                     setError('Error al eliminar');
                 }
             } catch {
-                setExpenses(prev);
-                setGrandTotalState((prevTotal) => prevTotal + amountToSubtract);
-                setError('Sin conexión. Intenta de nuevo.');
+                // Offline Mode: Queue mutation
+                syncManager.addAction({
+                    endpoint: `/api/expenses/${id}`,
+                    method: 'DELETE'
+                });
             }
         },
         [expenses]

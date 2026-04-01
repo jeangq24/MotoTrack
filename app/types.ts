@@ -1,9 +1,12 @@
 export type ServiceType = 'domicilio' | 'envio' | 'pasajero' | 'otro';
 
+export type ServiceStatus = 'completed' | 'scheduled';
+
 export interface ServiceRecord {
     id: string;
     type: ServiceType;
-    price: number;
+    price: number | null;
+    status: ServiceStatus;
     timestamp: string; // ISO string
     date: string;      // YYYY-MM-DD
     user_id?: string;
