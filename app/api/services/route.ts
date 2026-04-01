@@ -41,6 +41,7 @@ export async function POST(request: Request) {
             id: body.id,
             type: body.type,
             price: body.price,
+            status: body.status || 'completed',
             timestamp: body.timestamp,
             date: body.date,
             user_id: user.id,

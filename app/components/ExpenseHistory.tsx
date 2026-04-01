@@ -24,19 +24,20 @@ interface ExpenseHistoryProps {
 const formatCOP = (n: number) => '$' + n.toLocaleString('es-CO');
 
 function formatDate(dateStr: string): string {
+    const formatter = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' });
+    const todayStr = formatter.format(new Date());
+    const yesterdayStr = formatter.format(new Date(Date.now() - 86400000));
+
+    if (dateStr === todayStr) return '📅 Hoy';
+    if (dateStr === yesterdayStr) return '📅 Ayer';
+
     const [year, month, day] = dateStr.split('-').map(Number);
     const d = new Date(year, month - 1, day);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const yesterday = new Date(today);
-    yesterday.setDate(today.getDate() - 1);
-    if (d.getTime() === today.getTime()) return '📅 Hoy';
-    if (d.getTime() === yesterday.getTime()) return '📅 Ayer';
     return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
 }
 
 function formatTime(isoStr: string): string {
-    return new Date(isoStr).toLocaleTimeString('es-CO', { hour: '2-digit', minute: '2-digit' });
+    return new Date(isoStr).toLocaleTimeString('es-CO', { timeZone: 'America/Bogota', hour: '2-digit', minute: '2-digit' });
 }
 
 interface DeleteConfirmProps {

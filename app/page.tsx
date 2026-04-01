@@ -7,6 +7,7 @@ import { useServices } from './hooks/useServices';
 import { useExpenses } from './hooks/useExpenses';
 import { ServiceType, ExpenseType } from './types';
 import RegisterForm from './components/RegisterForm';
+import UpcomingServices from './components/UpcomingServices';
 import HistoryView from './components/HistoryView';
 import StatsBar from './components/StatsBar';
 import ExpenseForm from './components/ExpenseForm';
@@ -28,6 +29,7 @@ export default function Home() {
 
   const {
     loaded: servicesLoaded,
+    records: servicesRecords,
     todayRecords,
     todayTotal,
     grandTotal,
@@ -35,6 +37,7 @@ export default function Home() {
     sortedDates,
     getDayTotal,
     addService,
+    updateService,
     deleteService,
     loadMore: loadMoreServices,
     hasMore: hasMoreServices,
@@ -58,8 +61,27 @@ export default function Home() {
 
   const loaded = servicesLoaded && expensesLoaded;
 
-  const handleSaveService = (type: ServiceType, price: number) => {
-    addService(type, price);
+  const handleSaveService = (type: ServiceType, price: number | null, status: 'completed' | 'scheduled' = 'completed', customTimestamp?: string) => {
+    addService(type, price, status, customTimestamp);
+  };
+
+  const handleCompleteUpcoming = (id: string, finalPrice: number) => {
+    const now = new Date();
+    const tzDateStr = new Intl.DateTimeFormat('sv-SE', {
+      timeZone: 'America/Bogota',
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit'
+    }).format(now).replace(' ', 'T');
+    const localISO = `${tzDateStr}-05:00`;
+
+    const localDate = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' }).format(now);
+
+    updateService(id, {
+      status: 'completed',
+      price: finalPrice,
+      timestamp: localISO,
+      date: localDate
+    });
   };
 
   const handleSaveExpense = (type: ExpenseType, amount: number, note?: string) => {
@@ -93,7 +115,7 @@ export default function Home() {
                 </p>
               </div>
             </div>
-            
+
             <div className="flex flex-col items-end">
               <div className="flex items-center gap-2">
                 <span className="text-slate-400 text-xs font-medium">Neto Global</span>
@@ -129,50 +151,58 @@ export default function Home() {
           {/* Tab Content */}
           <div className="pb-28"> {/* Buffer for bottom nav */}
             {activeTab === 'registro' && (
-              <div role="tabpanel" aria-labelledby="tab-registro" id="panel-registro" className="bg-slate-900/40 rounded-[32px] p-5 shadow-2xl shadow-black/20 border border-white/5 backdrop-blur-sm">
-                <RegisterForm onSave={handleSaveService} />
+              <div role="tabpanel" aria-labelledby="tab-registro" id="panel-registro" className="flex flex-col gap-5">
+                <UpcomingServices
+                  records={servicesRecords}
+                  onComplete={handleCompleteUpcoming}
+                  onDelete={deleteService}
+                />
+                <div className="bg-slate-900/40 rounded-[32px] p-5 shadow-2xl shadow-black/20 border border-white/5 backdrop-blur-sm">
+                  <RegisterForm onSave={handleSaveService} />
+                </div>
               </div>
             )}
 
-          {activeTab === 'historial' && (
-            <div role="tabpanel" aria-labelledby="tab-historial" id="panel-historial">
-              <HistoryView
-                byDate={byDate}
-                sortedDates={sortedDates}
-                getDayTotal={getDayTotal}
-                onDelete={deleteService}
-                loadMore={loadMoreServices}
-                hasMore={hasMoreServices}
-                loadingMore={loadingMoreServices}
-              />
-            </div>
-          )}
+            {activeTab === 'historial' && (
+              <div role="tabpanel" aria-labelledby="tab-historial" id="panel-historial">
+                <HistoryView
+                  byDate={byDate}
+                  sortedDates={sortedDates}
+                  getDayTotal={getDayTotal}
+                  onDelete={deleteService}
+                  onUpdate={updateService}
+                  loadMore={loadMoreServices}
+                  hasMore={hasMoreServices}
+                  loadingMore={loadingMoreServices}
+                />
+              </div>
+            )}
 
-          {activeTab === 'gastos' && (
-            <div role="tabpanel" aria-labelledby="tab-gastos" id="panel-gastos" className="bg-slate-900/40 rounded-[32px] p-5 shadow-2xl shadow-black/20 border border-white/5 backdrop-blur-sm">
-              <ExpenseForm onSave={handleSaveExpense} />
-            </div>
-          )}
+            {activeTab === 'gastos' && (
+              <div role="tabpanel" aria-labelledby="tab-gastos" id="panel-gastos" className="bg-slate-900/40 rounded-[32px] p-5 shadow-2xl shadow-black/20 border border-white/5 backdrop-blur-sm">
+                <ExpenseForm onSave={handleSaveExpense} />
+              </div>
+            )}
 
-          {activeTab === 'historial-gastos' && (
-            <div role="tabpanel" aria-labelledby="tab-historial-gastos" id="panel-historial-gastos">
-              <ExpenseHistory
-                byDate={expensesByDate}
-                sortedDates={expenseSortedDates}
-                getDayExpenseTotal={getDayExpenseTotal}
-                onDelete={deleteExpense}
-                loadMore={loadMoreExpenses}
-                hasMore={hasMoreExpenses}
-                loadingMore={loadingMoreExpenses}
-              />
-            </div>
-          )}
+            {activeTab === 'historial-gastos' && (
+              <div role="tabpanel" aria-labelledby="tab-historial-gastos" id="panel-historial-gastos">
+                <ExpenseHistory
+                  byDate={expensesByDate}
+                  sortedDates={expenseSortedDates}
+                  getDayExpenseTotal={getDayExpenseTotal}
+                  onDelete={deleteExpense}
+                  loadMore={loadMoreExpenses}
+                  hasMore={hasMoreExpenses}
+                  loadingMore={loadingMoreExpenses}
+                />
+              </div>
+            )}
 
-          {activeTab === 'vehiculos' && (
-            <div role="tabpanel" aria-labelledby="tab-vehiculos" id="panel-vehiculos">
-               <VehicleManager />
-            </div>
-          )}
+            {activeTab === 'vehiculos' && (
+              <div role="tabpanel" aria-labelledby="tab-vehiculos" id="panel-vehiculos">
+                <VehicleManager />
+              </div>
+            )}
 
           </div> {/* End of buffer */}
 

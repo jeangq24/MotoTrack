@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
 import { Inter } from 'next/font/google';
 import './globals.css';
+import OfflineSyncProvider from './components/OfflineSyncProvider';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -74,6 +75,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={inter.className}>
       <body className="bg-slate-900 text-white antialiased">
+        <OfflineSyncProvider />
         {children}
       </body>
     </html>

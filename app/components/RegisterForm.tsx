@@ -12,7 +12,7 @@ const SERVICE_ICONS: Record<ServiceType, React.ReactNode> = {
 };
 
 interface RegisterFormProps {
-    onSave: (type: ServiceType, price: number) => void;
+    onSave: (type: ServiceType, price: number | null, status: 'completed' | 'scheduled', datetime?: string) => void;
 }
 
 const formatCOP = (n: number) =>
@@ -23,6 +23,9 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
     const [selectedPrice, setSelectedPrice] = useState<number | null>(null);
     const [customPrice, setCustomPrice] = useState('');
     const [showCustom, setShowCustom] = useState(false);
+    const [mode, setMode] = useState<'immediate' | 'scheduled'>('immediate');
+    const [scheduleDate, setScheduleDate] = useState('');
+    const [scheduleTime, setScheduleTime] = useState('');
     const [saved, setSaved] = useState(false);
 
     const serviceTypes: ServiceType[] = ['domicilio', 'envio', 'pasajero', 'otro'];
@@ -31,17 +34,39 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
         ? parseInt(customPrice.replace(/\D/g, ''), 10) || null
         : selectedPrice;
 
-    const canSave = selectedType !== null && effectivePrice !== null && effectivePrice > 0;
+    const canSaveImmediate = selectedType !== null && effectivePrice !== null && effectivePrice > 0;
+    
+    const isFuture = () => {
+        if (!scheduleDate || !scheduleTime) return false;
+        const now = new Date();
+        const selected = new Date(`${scheduleDate}T${scheduleTime}-05:00`);
+        return selected > now;
+    };
+    const canSaveScheduled = selectedType !== null && isFuture();
+    const canSave = mode === 'immediate' ? canSaveImmediate : canSaveScheduled;
+
+    const minDateStr = new Intl.DateTimeFormat('sv-SE', { timeZone: 'America/Bogota' }).format(new Date());
 
     const handleSave = () => {
-        if (!canSave || !selectedType || !effectivePrice) return;
-        onSave(selectedType, effectivePrice);
+        if (!canSave || !selectedType) return;
+        
+        if (mode === 'immediate') {
+            if (!effectivePrice) return;
+            onSave(selectedType, effectivePrice, 'completed');
+        } else {
+            const datetime = `${scheduleDate}T${scheduleTime}`;
+            onSave(selectedType, null, 'scheduled', datetime);
+        }
+
         setSaved(true);
         setTimeout(() => {
             setSelectedType(null);
             setSelectedPrice(null);
             setCustomPrice('');
             setShowCustom(false);
+            setMode('immediate');
+            setScheduleDate('');
+            setScheduleTime('');
             setSaved(false);
         }, 900);
     };
@@ -84,8 +109,23 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                 </div>
             </section>
 
-            {/* Step 2: Price */}
-            <section aria-labelledby="label-price" aria-live="polite">
+            {/* Step 1.5: Mode Toggle */}
+            <div className="flex bg-slate-900/50 p-1.5 rounded-2xl border border-white/5">
+                <button
+                    type="button"
+                    onClick={() => setMode('immediate')}
+                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'immediate' ? 'bg-amber-400 text-slate-900 shadow-lg scale-100' : 'text-slate-400 hover:text-slate-300 scale-95'}`}
+                >⚡ Finalizado</button>
+                <button
+                    type="button"
+                    onClick={() => setMode('scheduled')}
+                    className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all ${mode === 'scheduled' ? 'bg-blue-400 text-slate-900 shadow-lg scale-100' : 'text-slate-400 hover:text-slate-300 scale-95'}`}
+                >🗓️ Programar</button>
+            </div>
+
+            {/* Step 2: Details */}
+            {mode === 'immediate' ? (
+                <section aria-labelledby="label-price" aria-live="polite">
                 <h2 id="label-price" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3 ml-1">
                     2. ¿Cuánto cobraste?
                 </h2>
@@ -146,6 +186,35 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                     </div>
                 </div>
             </section>
+            ) : (
+                <section aria-labelledby="label-datetime" aria-live="polite">
+                    <h2 id="label-datetime" className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-3 ml-1">
+                        2. ¿Cuándo es el servicio?
+                    </h2>
+                    <div className="flex flex-col gap-3">
+                        <input 
+                            type="date" 
+                            title="Fecha"
+                            min={minDateStr}
+                            value={scheduleDate} 
+                            onChange={e => setScheduleDate(e.target.value)}
+                            className="w-full px-4 py-4 rounded-2xl bg-slate-950/50 text-white text-base font-bold border border-white/10 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        />
+                        <input 
+                            type="time" 
+                            title="Hora"
+                            value={scheduleTime} 
+                            onChange={e => setScheduleTime(e.target.value)}
+                            className="w-full px-4 py-4 rounded-2xl bg-slate-950/50 text-white text-base font-bold border border-white/10 focus:outline-none focus:border-blue-400 focus:ring-1 focus:ring-blue-400"
+                        />
+                    </div>
+                    {mode === 'scheduled' && scheduleDate && scheduleTime && !isFuture() && (
+                        <p className="text-red-400 text-xs font-bold mt-2 ml-1 animate-pulse">
+                            ⚠️ La fecha y hora deben ser en el futuro.
+                        </p>
+                    )}
+                </section>
+            )}
 
             {/* Step 3: Save Button */}
             <div className="mt-2 pt-2 border-t border-white/5">
@@ -163,7 +232,7 @@ export default function RegisterForm({ onSave }: RegisterFormProps) {
                     {saved ? (
                         <><CheckCircle2 className="w-6 h-6" /> ¡Guardado!</>
                     ) : (
-                        canSave ? 'Guardar servicio' : 'Llena los datos'
+                        canSave ? (mode === 'immediate' ? 'Guardar servicio' : 'Programar servicio') : (!isFuture() && mode === 'scheduled' && scheduleDate && scheduleTime ? 'Fecha inválida' : 'Llena los datos')
                     )}
                 </button>
             </div>

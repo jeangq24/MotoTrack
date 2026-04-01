@@ -56,7 +56,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=tu-anon-key-publica
 
 ### 3. Ejecutar la Base de Datos
 En el SQL Editor de tu proyecto de Supabase, **solo necesitas ejecutar un archivo:**
-Abre el archivo `supabase_init_production.sql` que se encuentra en la raíz, cópialo y ejecútalo entero. Este script se encargará de crear las tablas, relaciones, políticas de seguridad (RLS), y funciones optimizadas para el rendimiento (Total de gastos y producidos) en un solo paso (A partir de la v1.3.1).
+Abre el archivo `supabase_init_production.sql` que se encuentra en la raíz, cópialo y ejecútalo entero. Este script se encargará de crear las tablas, relaciones, políticas de seguridad (RLS), y funciones optimizadas para el rendimiento (Total de gastos y producidos) en un solo paso (A partir de la v1.4.0).
 
 ### 4. Arrancar en desarrollo
 ```bash
@@ -70,7 +70,7 @@ Abre [http://localhost:3000](http://localhost:3000).
 
 Este sistema apenas arranca. Las metas a mediano plazo incluyen:
 
-- [ ] **Modo Offline:** Migrar con Service Workers para que se puedan registrar carreras en zonas sin señal de internet y sincronizar al reconectar (Local-First).
+- [x] **Modo Offline:** Migrar con Service Workers para que se puedan registrar carreras en zonas sin señal de internet y sincronizar al reconectar (Local-First).
 - [ ] **Métricas Mensuales:** Gráficos visuales y comparativas (Ej: "¿Lunes o Domingo, qué día rinde más?").
 - [ ] **Multi-plataforma:** Compilación con Capacitor o React Native para tener notificaciones push nativas.
 
