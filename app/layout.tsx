@@ -28,7 +28,7 @@ export const metadata: Metadata = {
     siteName: 'MotoTrack',
     images: [{
       // Add an empty placeholder image array or link your brand logo here when ready
-      url: '/icon-512.png',
+      url: '/logo_mototrack.png',
       width: 512,
       height: 512,
       alt: 'MotoTrack Logo'
@@ -52,6 +52,10 @@ export const metadata: Metadata = {
     },
   },
   manifest: '/manifest.json',
+  icons: {
+    icon: '/logo_mototrack.png',
+    apple: '/logo_mototrack.png',
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: 'black-translucent',
